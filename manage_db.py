@@ -2,6 +2,7 @@ import sqlite3
 import argparse
 import os
 import sys
+import csv
 
 
 DB_FILE = "menu.db"
@@ -53,6 +54,107 @@ def db_add_dish(name, canteen, rating, meal_type, official_link, is_active):
     )
     conn.commit()
     conn.close()
+
+
+def db_add_dishes_batch(records):
+    conn = sqlite3.connect(DB_FILE)
+    cursor = conn.cursor()
+    cursor.executemany(
+        "INSERT INTO dishes (name, canteen, rating, meal_type, official_link, is_active) VALUES (?, ?, ?, ?, ?, ?)",
+        records,
+    )
+    conn.commit()
+    count = cursor.rowcount
+    conn.close()
+    return count
+
+
+def _parse_bool(v, default=True):
+    if v is None:
+        return default
+    s = str(v).strip().lower()
+    if s == "":
+        return default
+    if s in {"1", "true", "yes", "y", "on", "营业"}:
+        return True
+    if s in {"0", "false", "no", "n", "off", "停业"}:
+        return False
+    raise ValueError(f"无法识别布尔值: {v}")
+
+
+def batch_add_from_csv(
+    csv_file,
+    default_meal="午餐,晚餐",
+    default_link="",
+    default_active=True,
+    strict=False,
+):
+    if not os.path.exists(csv_file):
+        print(f"文件不存在: {csv_file}")
+        return
+
+    imported_records = []
+    failed_rows = []
+
+    with open(csv_file, "r", encoding="utf-8-sig", newline="") as f:
+        reader = csv.DictReader(f)
+        if not reader.fieldnames:
+            print("CSV 为空或缺少表头")
+            return
+
+        required = {"name", "canteen", "rating"}
+        if not required.issubset(set(reader.fieldnames)):
+            print("CSV 缺少必填列：name,canteen,rating")
+            print(f"当前表头: {','.join(reader.fieldnames)}")
+            return
+
+        for line_no, row in enumerate(reader, start=2):
+            try:
+                name = str(row.get("name", "")).strip()
+                canteen = str(row.get("canteen", "")).strip()
+                rating_raw = row.get("rating", "")
+
+                if not name or not canteen:
+                    raise ValueError("name/canteen 不能为空")
+
+                rating = float(rating_raw)
+                if rating < 0 or rating > 5:
+                    raise ValueError("rating 必须在 0-5 之间")
+
+                meal = str(row.get("meal_type") or row.get("meal") or default_meal).strip()
+                link = str(
+                    row.get("official_link") or row.get("link") or default_link
+                ).strip()
+                active = _parse_bool(
+                    row.get("is_active") if "is_active" in row else row.get("active"),
+                    default=default_active,
+                )
+
+                imported_records.append(
+                    (name, canteen, rating, meal, link, 1 if active else 0)
+                )
+            except Exception as e:
+                failed_rows.append((line_no, str(e)))
+                if strict:
+                    break
+
+    if not imported_records:
+        print("没有可导入的数据。")
+        if failed_rows:
+            print("失败明细:")
+            for line_no, err in failed_rows:
+                print(f"  行 {line_no}: {err}")
+        return
+
+    inserted_count = db_add_dishes_batch(imported_records)
+    print(f"批量导入完成：成功 {inserted_count} 条")
+
+    if failed_rows:
+        print(f"失败 {len(failed_rows)} 条")
+        for line_no, err in failed_rows:
+            print(f"  行 {line_no}: {err}")
+
+    print("CSV 字段说明: name,canteen,rating,meal_type,official_link,is_active")
 
 
 def db_update_dish(dish_id, name, canteen, rating, meal_type, official_link, is_active):
@@ -411,6 +513,20 @@ def main():
         "--closed", action="store_true", help="标记为停业 (默认: 营业)"
     )
 
+    # batch-add 命令
+    batch_parser = subparsers.add_parser("batch-add", help="从 CSV 批量添加菜品")
+    batch_parser.add_argument("file", help="CSV 文件路径")
+    batch_parser.add_argument(
+        "--meal", default="午餐,晚餐", help="缺省供应时段 (默认: 午餐,晚餐)"
+    )
+    batch_parser.add_argument("--link", default="", help="缺省公众号链接")
+    batch_parser.add_argument(
+        "--closed", action="store_true", help="缺省标记为停业 (默认: 营业)"
+    )
+    batch_parser.add_argument(
+        "--strict", action="store_true", help="遇到首条错误即停止导入"
+    )
+
     # delete 命令
     del_parser = subparsers.add_parser("delete", help="删除菜品")
     del_parser.add_argument("id", type=int, help="要删除的菜品ID")
@@ -440,6 +556,14 @@ def main():
     elif args.command == "add":
         add_dish(
             args.name, args.canteen, args.rating, args.meal, args.link, not args.closed
+        )
+    elif args.command == "batch-add":
+        batch_add_from_csv(
+            args.file,
+            default_meal=args.meal,
+            default_link=args.link,
+            default_active=not args.closed,
+            strict=args.strict,
         )
     elif args.command == "list":
         list_dishes()
