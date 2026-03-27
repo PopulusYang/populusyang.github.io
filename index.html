@@ -146,6 +146,34 @@
         a.official-link:hover {
             text-decoration: underline;
         }
+
+        @media (max-width: 768px) {
+            body {
+                margin: 10px;
+            }
+
+            .container {
+                padding: 12px;
+            }
+
+            th,
+            td {
+                padding: 10px 8px;
+                font-size: 14px;
+            }
+
+            /* 手机端仅保留：菜品名称(2)、评分(4)、详情(7) */
+            #menuTable th:nth-child(1),
+            #menuTable td:nth-child(1),
+            #menuTable th:nth-child(3),
+            #menuTable td:nth-child(3),
+            #menuTable th:nth-child(5),
+            #menuTable td:nth-child(5),
+            #menuTable th:nth-child(6),
+            #menuTable td:nth-child(6) {
+                display: none;
+            }
+        }
     </style>
     <!-- 引入 sql.js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/sql-wasm.js"></script>
