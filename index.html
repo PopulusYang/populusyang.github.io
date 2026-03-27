@@ -4,6 +4,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title>食堂菜品评分榜</title>
     <style>
         body {
@@ -209,12 +212,36 @@
     </div>
 
     <script>
+        function buildVersionStamp() {
+            const now = new Date();
+            const pad = (n) => String(n).padStart(2, '0');
+            return `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+        }
+
+        function getRuntimeVersion() {
+            const url = new URL(window.location.href);
+            const queryVersion = url.searchParams.get('v');
+            if (queryVersion) {
+                return queryVersion;
+            }
+
+            const autoVersion = buildVersionStamp();
+            url.searchParams.set('v', autoVersion);
+            window.location.replace(url.toString());
+            return null;
+        }
+
+        const APP_VERSION = getRuntimeVersion();
         const dbFile = "menu.db";
         let allRows = [];
         let allColumns = [];
         let currentQuery = "";
 
         async function loadDatabase() {
+            if (!APP_VERSION) {
+                return;
+            }
+
             // 配置 sql.js 加载路径
             const config = {
                 locateFile: filename => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/${filename}`
@@ -222,7 +249,9 @@
 
             try {
                 const SQL = await initSqlJs(config);
-                const response = await fetch(dbFile);
+                const response = await fetch(`${dbFile}?v=${encodeURIComponent(APP_VERSION)}`, {
+                    cache: 'no-store'
+                });
 
                 if (!response.ok) {
                     throw new Error(`无法加载数据库文件 (${response.status} ${response.statusText})`);
