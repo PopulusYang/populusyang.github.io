@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>今天吃什么</title>
+    <style>
+        :root {
+            --bg-main: #f6f1e5;
+            --bg-sub: #e4edd6;
+            --panel: #fffdf8;
+            --ink: #2f2a22;
+            --dice-a: #37603f;
+            --dice-b: #c9803a;
+            --shadow: rgba(40, 36, 31, 0.16);
+            --danger: #b23333;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: "Noto Serif SC", "STZhongsong", "Songti SC", "Microsoft YaHei", serif;
+            color: var(--ink);
+            background:
+                radial-gradient(circle at 15% 20%, rgba(255, 255, 255, 0.68), transparent 35%),
+                radial-gradient(circle at 82% 75%, rgba(55, 96, 63, 0.14), transparent 40%),
+                linear-gradient(145deg, var(--bg-main), var(--bg-sub));
+            padding: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .stage {
+            width: min(900px, 100%);
+            background: var(--panel);
+            border-radius: 20px;
+            border: 1px solid rgba(55, 96, 63, 0.2);
+            box-shadow: 0 14px 35px var(--shadow);
+            padding: 24px;
+            animation: entry 540ms ease-out both;
+        }
+
+        .top-nav {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 12px;
+        }
+
+        .nav-link {
+            text-decoration: none;
+            color: #fff;
+            background: #5e6b57;
+            border-radius: 999px;
+            padding: 8px 14px;
+            font-size: 0.9rem;
+            transition: transform 180ms ease, opacity 180ms ease;
+        }
+
+        .nav-link:hover {
+            transform: translateY(-2px);
+            opacity: 0.92;
+        }
+
+        h1 {
+            text-align: center;
+            margin: 4px 0 8px;
+            font-size: clamp(1.8rem, 5vw, 2.5rem);
+            color: #324f39;
+            letter-spacing: 1px;
+        }
+
+        .slot-hint {
+            text-align: center;
+            margin: 0 0 8px;
+            color: #5d594f;
+            line-height: 1.6;
+        }
+
+        .rule {
+            text-align: center;
+            margin: 0 0 14px;
+            font-size: 0.92rem;
+            color: #787263;
+        }
+
+        .status {
+            text-align: center;
+            color: #4a6a42;
+            min-height: 24px;
+            margin-bottom: 12px;
+        }
+
+        .status.warning {
+            color: var(--danger);
+        }
+
+        .dice-wrap {
+            display: flex;
+            justify-content: center;
+            margin-top: 8px;
+        }
+
+        .dice {
+            width: min(56vw, 190px);
+            height: min(56vw, 190px);
+            border-radius: 22px;
+            background: linear-gradient(145deg, var(--dice-b), var(--dice-a));
+            box-shadow:
+                inset 0 0 16px rgba(255, 255, 255, 0.16),
+                0 12px 22px rgba(55, 96, 63, 0.28);
+            border: 2px solid rgba(255, 255, 255, 0.36);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 14px;
+            transform-style: preserve-3d;
+        }
+
+        .dice.rolling {
+            animation: roll 1.65s cubic-bezier(0.16, 0.84, 0.44, 1);
+        }
+
+        .dice-face {
+            color: #fff;
+            text-align: center;
+            font-weight: 700;
+            font-size: clamp(1rem, 4.6vw, 1.35rem);
+            line-height: 1.4;
+            word-break: break-all;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+            max-height: 100%;
+            overflow: hidden;
+        }
+
+        .actions {
+            display: flex;
+            justify-content: center;
+            margin-top: 18px;
+        }
+
+        .roll-btn {
+            border: none;
+            background: linear-gradient(120deg, #2f5136, #d08a43);
+            color: #fff;
+            font-size: 1.06rem;
+            border-radius: 999px;
+            padding: 12px 30px;
+            cursor: pointer;
+            letter-spacing: 1px;
+            box-shadow: 0 8px 18px rgba(53, 82, 44, 0.24);
+            transition: transform 180ms ease, filter 180ms ease;
+        }
+
+        .roll-btn:hover {
+            transform: translateY(-2px);
+            filter: brightness(1.02);
+        }
+
+        .roll-btn:disabled {
+            opacity: 0.62;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .result {
+            margin-top: 20px;
+            border-radius: 14px;
+            background: rgba(245, 241, 232, 0.92);
+            border: 1px solid rgba(95, 121, 84, 0.2);
+            padding: 16px;
+            text-align: center;
+        }
+
+        .result h2 {
+            margin: 0;
+            color: #314f39;
+            font-size: 1.46rem;
+        }
+
+        .result p {
+            margin: 8px 0 0;
+            color: #5f5a50;
+        }
+
+        .dish-link-wrap {
+            margin-top: 10px;
+        }
+
+        .dish-link {
+            color: #2f5136;
+            font-weight: 700;
+            text-decoration: none;
+            border-bottom: 1px dashed rgba(47, 81, 54, 0.45);
+        }
+
+        .dish-link:hover {
+            color: #c9803a;
+            border-bottom-color: rgba(201, 128, 58, 0.6);
+        }
+
+        .detail-container {
+            margin-top: 14px;
+            text-align: left;
+            background: rgba(255, 255, 255, 0.6);
+            border: 1px solid rgba(95, 121, 84, 0.26);
+            border-radius: 10px;
+            padding: 10px;
+        }
+
+        .detail-title {
+            font-size: 0.92rem;
+            color: #5f5a50;
+            margin-bottom: 8px;
+        }
+
+        .detail-frame {
+            width: 100%;
+            height: 360px;
+            border: 1px solid rgba(95, 121, 84, 0.25);
+            border-radius: 8px;
+            background: #fff;
+        }
+
+        .detail-tip {
+            margin: 8px 0 0;
+            font-size: 0.86rem;
+            color: #7a7569;
+        }
+
+        .embed-warning {
+            margin-top: 8px;
+            font-size: 0.9rem;
+            color: #8a4b22;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        @keyframes entry {
+            from {
+                opacity: 0;
+                transform: translateY(18px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes roll {
+            0% {
+                transform: rotate(0deg) scale(1);
+            }
+
+            25% {
+                transform: rotate(160deg) scale(1.04);
+            }
+
+            55% {
+                transform: rotate(380deg) scale(0.98);
+            }
+
+            85% {
+                transform: rotate(640deg) scale(1.02);
+            }
+
+            100% {
+                transform: rotate(720deg) scale(1);
+            }
+        }
+
+        @media (max-width: 640px) {
+            .stage {
+                border-radius: 14px;
+                padding: 18px 14px;
+            }
+
+            .roll-btn {
+                width: 100%;
+                max-width: 280px;
+            }
+
+            .detail-frame {
+                height: 300px;
+            }
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/sql-wasm.js"></script>
+</head>
+
+<body>
+    <main class="stage">
+        <div class="top-nav">
+            <a class="nav-link" href="index.html">返回猎人小屋</a>
+            <a class="nav-link" href="reviewed.html">去看已评测</a>
+        </div>
+
+        <h1>今天吃什么</h1>
+        <p id="slotHint" class="slot-hint">正在判断时段...</p>
+        <p class="rule">时段规则：08:30 前为早餐，08:30-14:59 为午餐，15:00 后为晚餐。</p>
+        <div id="status" class="status">正在加载数据库...</div>
+
+        <div class="dice-wrap">
+            <div id="dice" class="dice" aria-live="polite">
+                <div id="diceFace" class="dice-face">准备开摇</div>
+            </div>
+        </div>
+
+        <div class="actions">
+            <button id="rollButton" class="roll-btn" type="button">吃啥？</button>
+        </div>
+
+        <section id="result" class="result hidden" aria-live="polite">
+            <h2 id="dishName"></h2>
+            <p id="dishMeta"></p>
+            <p id="dishLinkWrap" class="dish-link-wrap hidden">
+                <a id="dishLink" class="dish-link" href="#" target="_blank" rel="noopener noreferrer">查看详情链接</a>
+            </p>
+            <p id="embedWarning" class="embed-warning hidden"></p>
+            <div id="detailContainer" class="detail-container hidden">
+                <div class="detail-title">详情预览</div>
+                <iframe id="detailFrame" class="detail-frame" title="详情预览"></iframe>
+                <p class="detail-tip">部分网站可能限制嵌入显示，若空白请点击上方详情链接。</p>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        const dbFile = 'menu.db';
+        let allDishes = [];
+        let candidateDishes = [];
+        let activeSlot = '';
+        let rolling = false;
+
+        const blockedEmbedHosts = new Set([
+            'mp.weixin.qq.com',
+            'weixin.qq.com'
+        ]);
+
+        function canEmbedInFrame(url) {
+            try {
+                const host = new URL(url).hostname.toLowerCase();
+                return !blockedEmbedHosts.has(host);
+            } catch (err) {
+                return false;
+            }
+        }
+
+        function getCurrentSlot(now = new Date()) {
+            const minutes = now.getHours() * 60 + now.getMinutes();
+            const breakfastEnd = 8 * 60 + 30;
+            const dinnerStart = 15 * 60;
+
+            if (minutes < breakfastEnd) return '早餐';
+            if (minutes >= dinnerStart) return '晚餐';
+            return '午餐';
+        }
+
+        function splitMealTags(mealType) {
+            return String(mealType || '')
+                .split(/[，,、/;；]/g)
+                .map(item => item.trim())
+                .filter(Boolean);
+        }
+
+        function dishSupportsSlot(dish, slot) {
+            return splitMealTags(dish.mealType).includes(slot);
+        }
+
+        function updateSlotHint() {
+            const slotHint = document.getElementById('slotHint');
+            activeSlot = getCurrentSlot();
+            slotHint.textContent = `当前时段：${activeSlot}`;
+        }
+
+        function buildDishFromRow(row, columns) {
+            const indexOf = (name) => columns.indexOf(name);
+            const read = (name) => {
+                const idx = indexOf(name);
+                return idx !== -1 ? row[idx] : null;
+            };
+
+            const id = read('id');
+            const name = String(read('name') ?? '').trim();
+            const canteen = String(read('canteen') ?? '未知食堂').trim();
+            const ratingRaw = read('rating');
+            const ratingNum = Number(ratingRaw);
+            const rating = Number.isFinite(ratingNum) ? ratingNum.toFixed(1) : '-';
+            const mealType = String(read('meal_type') ?? '午餐,晚餐').trim();
+            const officialLinkRaw = String(read('official_link') ?? '').trim();
+            const officialLink = officialLinkRaw
+                ? (officialLinkRaw.startsWith('http://') || officialLinkRaw.startsWith('https://')
+                    ? officialLinkRaw
+                    : `http://${officialLinkRaw}`)
+                : '';
+            const isActiveRaw = read('is_active');
+            const isActive = isActiveRaw === null || isActiveRaw === undefined ? true : Number(isActiveRaw) !== 0;
+
+            return { id, name, canteen, rating, mealType, officialLink, isActive };
+        }
+
+        async function loadDishes() {
+            const status = document.getElementById('status');
+            status.className = 'status';
+            status.textContent = '正在加载数据库...';
+
+            const config = {
+                locateFile: filename => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/${filename}`
+            };
+
+            try {
+                const SQL = await initSqlJs(config);
+                const response = await fetch(`${dbFile}?v=${Date.now()}`, { cache: 'no-store' });
+
+                if (!response.ok) {
+                    throw new Error(`无法加载数据库文件 (${response.status} ${response.statusText})`);
+                }
+
+                const buffer = await response.arrayBuffer();
+                const db = new SQL.Database(new Uint8Array(buffer));
+
+                let result;
+                try {
+                    result = db.exec('SELECT * FROM dishes');
+                } catch (err) {
+                    console.warn('查询全部字段失败，尝试基础字段', err);
+                    result = db.exec('SELECT id, name, canteen, rating FROM dishes');
+                }
+
+                if (!result.length) {
+                    allDishes = [];
+                    candidateDishes = [];
+                    status.className = 'status warning';
+                    status.textContent = '数据库为空，暂时没有可抽取的菜品。';
+                    db.close();
+                    return;
+                }
+
+                const columns = result[0].columns;
+                const rows = result[0].values;
+                allDishes = rows
+                    .map(row => buildDishFromRow(row, columns))
+                    .filter(item => item.name);
+
+                db.close();
+
+                refreshCandidates();
+            } catch (err) {
+                console.error(err);
+                allDishes = [];
+                candidateDishes = [];
+                status.className = 'status warning';
+                status.textContent = `加载失败：${err.message}`;
+            }
+        }
+
+        function refreshCandidates() {
+            const status = document.getElementById('status');
+            updateSlotHint();
+
+            const activeDishes = allDishes.filter(item => item.isActive);
+            candidateDishes = activeDishes.filter(item => dishSupportsSlot(item, activeSlot));
+
+            if (!candidateDishes.length) {
+                status.className = 'status warning';
+                status.textContent = `当前时段（${activeSlot}）没有可抽取菜品。`;
+                return;
+            }
+
+            status.className = 'status';
+            status.textContent = `已载入 ${candidateDishes.length} 道${activeSlot}菜品，可开始摇骰子。`;
+        }
+
+        function pickRandomDish() {
+            if (!candidateDishes.length) return null;
+            const randomIndex = Math.floor(Math.random() * candidateDishes.length);
+            return candidateDishes[randomIndex];
+        }
+
+        function updateResult(dish) {
+            const result = document.getElementById('result');
+            const dishName = document.getElementById('dishName');
+            const dishMeta = document.getElementById('dishMeta');
+            const dishLinkWrap = document.getElementById('dishLinkWrap');
+            const dishLink = document.getElementById('dishLink');
+            const embedWarning = document.getElementById('embedWarning');
+            const detailContainer = document.getElementById('detailContainer');
+            const detailFrame = document.getElementById('detailFrame');
+            const diceFace = document.getElementById('diceFace');
+
+            if (!dish) {
+                result.classList.add('hidden');
+                dishLinkWrap.classList.add('hidden');
+                embedWarning.classList.add('hidden');
+                detailContainer.classList.add('hidden');
+                detailFrame.src = 'about:blank';
+                diceFace.textContent = '无可用菜品';
+                return;
+            }
+
+            diceFace.textContent = dish.name;
+            dishName.textContent = dish.name;
+            dishMeta.textContent = `${dish.canteen} | 评分 ${dish.rating} | 供应时段 ${dish.mealType}`;
+            if (dish.officialLink) {
+                dishLink.href = dish.officialLink;
+                dishLinkWrap.classList.remove('hidden');
+                if (canEmbedInFrame(dish.officialLink)) {
+                    embedWarning.classList.add('hidden');
+                    detailFrame.src = dish.officialLink;
+                    detailContainer.classList.remove('hidden');
+                } else {
+                    detailContainer.classList.add('hidden');
+                    detailFrame.src = 'about:blank';
+                    embedWarning.textContent = '该链接站点禁止页面内嵌，已为你保留上方详情链接，可点击在新页面打开。';
+                    embedWarning.classList.remove('hidden');
+                }
+            } else {
+                dishLinkWrap.classList.add('hidden');
+                embedWarning.classList.add('hidden');
+                detailContainer.classList.add('hidden');
+                detailFrame.src = 'about:blank';
+            }
+            result.classList.remove('hidden');
+        }
+
+        function runRollingAnimation() {
+            const dice = document.getElementById('dice');
+            const diceFace = document.getElementById('diceFace');
+
+            return new Promise(resolve => {
+                dice.classList.add('rolling');
+
+                const timer = setInterval(() => {
+                    const preview = pickRandomDish();
+                    if (preview) {
+                        diceFace.textContent = preview.name;
+                    }
+                }, 110);
+
+                setTimeout(() => {
+                    clearInterval(timer);
+                    dice.classList.remove('rolling');
+                    resolve();
+                }, 1650);
+            });
+        }
+
+        async function rollDish() {
+            if (rolling) return;
+
+            const rollButton = document.getElementById('rollButton');
+            const latestSlot = getCurrentSlot();
+            if (latestSlot !== activeSlot) {
+                refreshCandidates();
+            }
+
+            if (!candidateDishes.length) {
+                updateResult(null);
+                return;
+            }
+
+            rolling = true;
+            rollButton.disabled = true;
+
+            await runRollingAnimation();
+            const dish = pickRandomDish();
+            updateResult(dish);
+
+            rollButton.disabled = false;
+            rolling = false;
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            updateSlotHint();
+            const rollButton = document.getElementById('rollButton');
+            rollButton.addEventListener('click', rollDish);
+
+            await loadDishes();
+
+            // 每分钟刷新时段筛选，确保跨时段后抽取规则自动切换。
+            setInterval(() => {
+                if (!rolling && allDishes.length) {
+                    refreshCandidates();
+                }
+            }, 60000);
+        });
+    </script>
+</body>
+
+</html>

@@ -4,409 +4,155 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-    <meta http-equiv="Pragma" content="no-cache">
-    <meta http-equiv="Expires" content="0">
-    <title>食堂菜品评分榜</title>
+    <title>猎人小屋</title>
     <style>
+        :root {
+            --bg-1: #f3efe4;
+            --bg-2: #d9e3c5;
+            --card: #fffdf8;
+            --ink: #2b2a28;
+            --accent-a: #3f6f4b;
+            --accent-b: #c97732;
+            --shadow: rgba(43, 42, 40, 0.15);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 20px;
-            background-color: #f4f4f9;
+            margin: 0;
+            min-height: 100vh;
+            font-family: "Noto Serif SC", "STZhongsong", "Songti SC", "Microsoft YaHei", serif;
+            color: var(--ink);
+            background:
+                radial-gradient(circle at 18% 15%, rgba(255, 255, 255, 0.68), transparent 34%),
+                radial-gradient(circle at 82% 78%, rgba(201, 119, 50, 0.22), transparent 35%),
+                linear-gradient(140deg, var(--bg-1), var(--bg-2));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+
+        .panel {
+            width: min(900px, 100%);
+            background: var(--card);
+            border-radius: 20px;
+            box-shadow: 0 12px 40px var(--shadow);
+            border: 1px solid rgba(63, 111, 75, 0.18);
+            padding: 34px 28px;
+            animation: rise-in 560ms ease-out both;
         }
 
         h1 {
+            margin: 0;
             text-align: center;
-            color: #333;
+            letter-spacing: 2px;
+            font-size: clamp(2rem, 5vw, 2.8rem);
+            color: #2f4f38;
         }
 
-        .container {
-            max-width: 950px;
-            margin: 0 auto;
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        .subtitle {
+            margin: 14px auto 28px;
+            text-align: center;
+            color: #5a5a55;
+            max-width: 560px;
+            line-height: 1.7;
+            font-size: 1rem;
         }
 
-        .toolbar {
+        .module-row {
             display: flex;
-            gap: 10px;
-            align-items: center;
-            margin-top: 15px;
+            gap: 16px;
+            justify-content: center;
             flex-wrap: wrap;
         }
 
-        .search-input {
+        .module-button {
             flex: 1;
-            min-width: 220px;
-            padding: 10px 12px;
-            border: 1px solid #ced4da;
-            border-radius: 6px;
-            font-size: 14px;
-        }
-
-        .search-button,
-        .clear-button {
-            padding: 10px 16px;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 14px;
-        }
-
-        .search-button {
-            background: #007bff;
-            color: #fff;
-        }
-
-        .clear-button {
-            background: #6c757d;
-            color: #fff;
-        }
-
-        .result-hint {
-            margin-top: 10px;
-            color: #666;
-            font-size: 0.95rem;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
-
-        th,
-        td {
-            padding: 12px 15px;
-            text-align: left;
-            border-bottom: 1px solid #ddd;
-        }
-
-        th {
-            background-color: #007bff;
-            color: white;
-        }
-
-        tr:hover {
-            background-color: #f1f1f1;
-        }
-
-        .loading {
-            text-align: center;
-            font-style: italic;
-            color: #666;
-        }
-
-        .error {
-            color: red;
-            text-align: center;
-        }
-
-        /* New Styles */
-        .status-closed-row {
-            color: #999;
-            background-color: #fafafa;
-        }
-
-        .status-badge {
-            display: inline-block;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 0.8rem;
-            color: white;
-            font-weight: bold;
-            text-align: center;
-            min-width: 40px;
-        }
-
-        .badge-active {
-            background-color: #28a745;
-        }
-
-        .badge-closed {
-            background-color: #6c757d;
-        }
-
-        .meal-tag {
-            background-color: #e9ecef;
-            color: #495057;
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-size: 0.85em;
-            margin-right: 4px;
-            display: inline-block;
-            border: 1px solid #dee2e6;
-        }
-
-        a.official-link {
-            color: #007bff;
+            min-width: 240px;
+            max-width: 360px;
             text-decoration: none;
-            font-weight: 500;
+            color: var(--ink);
+            background: linear-gradient(155deg, rgba(255, 255, 255, 0.93), rgba(255, 248, 236, 0.95));
+            border: 1px solid rgba(63, 111, 75, 0.2);
+            border-radius: 16px;
+            padding: 22px 20px;
+            transition: transform 220ms ease, box-shadow 220ms ease, border-color 220ms ease;
+            box-shadow: 0 8px 20px rgba(32, 48, 37, 0.08);
         }
 
-        a.official-link:hover {
-            text-decoration: underline;
+        .module-button:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 14px 26px rgba(32, 48, 37, 0.16);
+            border-color: rgba(201, 119, 50, 0.5);
         }
 
-        @media (max-width: 768px) {
-            body {
-                margin: 10px;
+        .module-label {
+            font-size: 1.35rem;
+            color: #2f4f38;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .module-desc {
+            margin: 0;
+            color: #5f5b54;
+            line-height: 1.6;
+            font-size: 0.96rem;
+        }
+
+        .today {
+            border-left: 5px solid var(--accent-a);
+        }
+
+        .rated {
+            border-left: 5px solid var(--accent-b);
+        }
+
+        @keyframes rise-in {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
             }
 
-            .container {
-                padding: 12px;
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 640px) {
+            .panel {
+                padding: 24px 16px;
+                border-radius: 14px;
             }
 
-            th,
-            td {
-                padding: 10px 8px;
-                font-size: 14px;
-            }
-
-            /* 手机端仅保留：菜品名称(2)、评分(4)、详情(7) */
-            #menuTable th:nth-child(1),
-            #menuTable td:nth-child(1),
-            #menuTable th:nth-child(3),
-            #menuTable td:nth-child(3),
-            #menuTable th:nth-child(5),
-            #menuTable td:nth-child(5),
-            #menuTable th:nth-child(6),
-            #menuTable td:nth-child(6) {
-                display: none;
+            .module-button {
+                max-width: none;
             }
         }
     </style>
-    <!-- 引入 sql.js -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/sql-wasm.js"></script>
 </head>
 
 <body>
+    <main class="panel">
+        <h1>猎人小屋</h1>
+        <p class="subtitle">今天是想稳妥进食，还是让骰子替你做决定？</p>
 
-    <div class="container">
-        <h1>食堂菜品评分榜</h1>
-        <div class="toolbar">
-            <input id="searchInput" class="search-input" type="text" placeholder="搜索菜名、食堂或供应时段...">
-            <button class="search-button" onclick="applySearch()">搜索</button>
-            <button class="clear-button" onclick="clearSearch()">清除</button>
-        </div>
-        <div id="resultHint" class="result-hint"></div>
-        <div id="status" class="loading">正在加载数据库...</div>
-        <table id="menuTable" style="display: none;">
-            <thead>
-                <tr>
-                    <th width="8%">编号</th>
-                    <th width="20%">菜品名称</th>
-                    <th width="15%">食堂</th>
-                    <th width="8%">评分</th>
-                    <th width="20%">供应时段</th>
-                    <th width="10%">状态</th>
-                    <th width="10%">详情</th>
-                </tr>
-            </thead>
-            <tbody id="tableBody">
-                <!-- 数据将插入这里 -->
-            </tbody>
-        </table>
-    </div>
+        <section class="module-row" aria-label="功能模块">
+            <a class="module-button today" href="dice.html" aria-label="进入今天吃什么模块">
+                <div class="module-label">今天吃什么</div>
+                <p class="module-desc">进入摇骰子页面，按当前时段随机抽取可吃菜品。</p>
+            </a>
 
-    <script>
-        function buildVersionStamp() {
-            const now = new Date();
-            const pad = (n) => String(n).padStart(2, '0');
-            return `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
-        }
-
-        function getRuntimeVersion() {
-            const url = new URL(window.location.href);
-            const queryVersion = url.searchParams.get('v');
-            if (queryVersion) {
-                return queryVersion;
-            }
-
-            const autoVersion = buildVersionStamp();
-            url.searchParams.set('v', autoVersion);
-            window.location.replace(url.toString());
-            return null;
-        }
-
-        const APP_VERSION = getRuntimeVersion();
-        const dbFile = "menu.db";
-        let allRows = [];
-        let allColumns = [];
-        let currentQuery = "";
-
-        async function loadDatabase() {
-            if (!APP_VERSION) {
-                return;
-            }
-
-            // 配置 sql.js 加载路径
-            const config = {
-                locateFile: filename => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/${filename}`
-            };
-
-            try {
-                const SQL = await initSqlJs(config);
-                const response = await fetch(`${dbFile}?v=${encodeURIComponent(APP_VERSION)}`, {
-                    cache: 'no-store'
-                });
-
-                if (!response.ok) {
-                    throw new Error(`无法加载数据库文件 (${response.status} ${response.statusText})`);
-                }
-
-                const buffer = await response.arrayBuffer();
-                const db = new SQL.Database(new Uint8Array(buffer));
-
-                // 查询数据
-                let result;
-                try {
-                    // 尝试查询所有列，包括新列
-                    result = db.exec("SELECT * FROM dishes");
-                } catch (queryErr) {
-                    console.warn("查询全部字段失败，尝试仅查询基础字段", queryErr);
-                    // 兼容旧版数据库，只查存在的基础列
-                    result = db.exec("SELECT id, name, canteen, rating FROM dishes");
-                }
-
-                if (result.length > 0) {
-                    // result[0] 包含 columns 和 values
-                    allColumns = result[0].columns;
-                    allRows = result[0].values;
-                    renderTable({ columns: allColumns, values: allRows });
-                    document.getElementById('status').style.display = 'none';
-                    document.getElementById('menuTable').style.display = 'table';
-                } else {
-                    document.getElementById('status').textContent = "数据库为空或没有数据。";
-                }
-
-                db.close();
-
-            } catch (err) {
-                console.error(err);
-                document.getElementById('status').textContent = "加载失败: " + err.message;
-                document.getElementById('status').className = "error";
-            }
-        }
-
-        function renderTable(data) {
-            const tbody = document.getElementById('tableBody');
-            tbody.innerHTML = '';
-
-            const cols = data.columns;
-            const rows = data.values;
-
-            // 辅助函数：根据列名获取值，如果列不存在返回 null
-            const getVal = (row, colName) => {
-                const idx = cols.indexOf(colName);
-                return idx !== -1 ? row[idx] : null;
-            };
-
-            rows.forEach(row => {
-                const id = getVal(row, 'id');
-                const name = getVal(row, 'name');
-                const canteen = getVal(row, 'canteen');
-                const rating = getVal(row, 'rating');
-
-                // 获取新字段值 (带默认处理)
-                // 如果是旧数据行，SQLite ALTER TABLE 会自动填充默认值，但如果是 JS 兼容模式查询则需这里处理
-                let mealType = getVal(row, 'meal_type') || "午餐,晚餐";
-                let officialLink = getVal(row, 'official_link') || "";
-                let isActive = getVal(row, 'is_active');
-                // is_active 可能是 0, 1, 或 null (如果用旧query查)
-                if (isActive === null) isActive = 1;
-
-                const tr = document.createElement('tr');
-
-                // 如果停业，整行变灰
-                if (!isActive) {
-                    tr.classList.add('status-closed-row');
-                }
-
-                // 格式化供应时段
-                const mealsHtml = mealType.split(/[,，]/g)
-                    .map(m => `<span class="meal-tag">${m.trim()}</span>`)
-                    .join('');
-
-                // 格式化状态徽章
-                const statusHtml = isActive
-                    ? `<span class="status-badge badge-active">营业</span>`
-                    : `<span class="status-badge badge-closed">停业</span>`;
-
-                // 格式化链接
-                let linkHtml = '<span style="color:#ccc">-</span>';
-                if (officialLink) {
-                    const url = officialLink.startsWith('http') ? officialLink : `http://${officialLink}`;
-                    linkHtml = `<a href="${url}" target="_blank" class="official-link">查看</a>`;
-                }
-
-                tr.innerHTML = `
-                <td>${id}</td>
-                <td>${name}</td>
-                <td>${canteen}</td>
-                <td>${parseFloat(rating).toFixed(1)}</td>
-                <td>${mealsHtml}</td>
-                <td>${statusHtml}</td>
-                <td>${linkHtml}</td>
-            `;
-                tbody.appendChild(tr);
-            });
-
-            const hint = document.getElementById('resultHint');
-            if (currentQuery) {
-                hint.textContent = `找到 ${rows.length} 条匹配结果：${currentQuery}`;
-            } else {
-                hint.textContent = rows.length > 0 ? `共 ${rows.length} 条菜品记录` : '';
-            }
-        }
-
-        function applySearch() {
-            currentQuery = document.getElementById('searchInput').value.trim();
-            if (!allRows.length) return;
-
-            if (!currentQuery) {
-                renderTable({ columns: allColumns, values: allRows });
-                return;
-            }
-
-            const q = currentQuery.toLowerCase();
-            const cols = allColumns;
-            const idxName = cols.indexOf('name');
-            const idxCanteen = cols.indexOf('canteen');
-            const idxMeal = cols.indexOf('meal_type');
-            const idxLink = cols.indexOf('official_link');
-
-            const filteredRows = allRows.filter(row => {
-                const name = idxName !== -1 ? String(row[idxName] ?? '').toLowerCase() : '';
-                const canteen = idxCanteen !== -1 ? String(row[idxCanteen] ?? '').toLowerCase() : '';
-                const meal = idxMeal !== -1 ? String(row[idxMeal] ?? '').toLowerCase() : '';
-                const link = idxLink !== -1 ? String(row[idxLink] ?? '').toLowerCase() : '';
-                return name.includes(q) || canteen.includes(q) || meal.includes(q) || link.includes(q);
-            });
-
-            renderTable({ columns: allColumns, values: filteredRows });
-        }
-
-        function clearSearch() {
-            document.getElementById('searchInput').value = '';
-            currentQuery = '';
-            if (allRows.length) {
-                renderTable({ columns: allColumns, values: allRows });
-            }
-        }
-
-        document.addEventListener('DOMContentLoaded', () => {
-            const input = document.getElementById('searchInput');
-            input.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter') applySearch();
-            });
-        });
-
-        window.onload = loadDatabase;
-    </script>
-
+            <a class="module-button rated" href="reviewed.html" aria-label="进入已评测模块">
+                <div class="module-label">已评测</div>
+                <p class="module-desc">查看和搜索全部已收录菜品评分，并支持按列排序。</p>
+            </a>
+        </section>
+    </main>
 </body>
 
 </html>
