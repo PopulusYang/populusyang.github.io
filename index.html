@@ -4,6 +4,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title>猎人小屋</title>
     <style>
         :root {
@@ -153,6 +156,62 @@
             </a>
         </section>
     </main>
+
+    <script>
+        const VERSION_STORAGE_KEY = 'hunterHutRuntimeVersion';
+
+        function buildVersionStamp() {
+            const now = new Date();
+            const pad = (n) => String(n).padStart(2, '0');
+            return `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+        }
+
+        function getSessionVersion() {
+            try {
+                const stored = sessionStorage.getItem(VERSION_STORAGE_KEY);
+                if (stored) return stored;
+
+                const generated = buildVersionStamp();
+                sessionStorage.setItem(VERSION_STORAGE_KEY, generated);
+                return generated;
+            } catch (err) {
+                return buildVersionStamp();
+            }
+        }
+
+        function ensureRuntimeVersion() {
+            const url = new URL(window.location.href);
+            const sessionVersion = getSessionVersion();
+
+            if (url.searchParams.get('v') !== sessionVersion) {
+                url.searchParams.set('v', sessionVersion);
+                window.location.replace(url.toString());
+                return null;
+            }
+
+            return sessionVersion;
+        }
+
+        function appendVersionToLinks(version) {
+            const links = document.querySelectorAll('a[href$=".html"], a[href*=".html?"]');
+            links.forEach(link => {
+                const targetUrl = new URL(link.getAttribute('href'), window.location.href);
+                targetUrl.searchParams.set('v', version);
+                link.setAttribute('href', `${targetUrl.pathname}${targetUrl.search}${targetUrl.hash}`);
+            });
+        }
+
+        const APP_VERSION = ensureRuntimeVersion();
+        if (APP_VERSION) {
+            appendVersionToLinks(APP_VERSION);
+        }
+
+        window.addEventListener('pageshow', (event) => {
+            if (event.persisted) {
+                window.location.reload();
+            }
+        });
+    </script>
 </body>
 
 </html>

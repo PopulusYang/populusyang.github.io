@@ -264,26 +264,60 @@
     </div>
 
     <script>
+        const VERSION_STORAGE_KEY = 'hunterHutRuntimeVersion';
+
         function buildVersionStamp() {
             const now = new Date();
             const pad = (n) => String(n).padStart(2, '0');
             return `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
         }
 
+        function getSessionVersion() {
+            try {
+                const stored = sessionStorage.getItem(VERSION_STORAGE_KEY);
+                if (stored) return stored;
+
+                const generated = buildVersionStamp();
+                sessionStorage.setItem(VERSION_STORAGE_KEY, generated);
+                return generated;
+            } catch (err) {
+                return buildVersionStamp();
+            }
+        }
+
         function getRuntimeVersion() {
             const url = new URL(window.location.href);
-            const queryVersion = url.searchParams.get('v');
-            if (queryVersion) {
-                return queryVersion;
+            const sessionVersion = getSessionVersion();
+
+            if (url.searchParams.get('v') !== sessionVersion) {
+                url.searchParams.set('v', sessionVersion);
+                window.location.replace(url.toString());
+                return null;
             }
 
-            const autoVersion = buildVersionStamp();
-            url.searchParams.set('v', autoVersion);
-            window.location.replace(url.toString());
-            return null;
+            return sessionVersion;
+        }
+
+        function appendVersionToLinks(version) {
+            const links = document.querySelectorAll('a[href$=".html"], a[href*=".html?"]');
+            links.forEach(link => {
+                const targetUrl = new URL(link.getAttribute('href'), window.location.href);
+                targetUrl.searchParams.set('v', version);
+                link.setAttribute('href', `${targetUrl.pathname}${targetUrl.search}${targetUrl.hash}`);
+            });
         }
 
         const APP_VERSION = getRuntimeVersion();
+        if (APP_VERSION) {
+            appendVersionToLinks(APP_VERSION);
+        }
+
+        window.addEventListener('pageshow', (event) => {
+            if (event.persisted) {
+                window.location.reload();
+            }
+        });
+
         const dbFile = "menu.db";
         let allRows = [];
         let allColumns = [];
