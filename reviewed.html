@@ -68,7 +68,8 @@
         }
 
         .search-button,
-        .clear-button {
+        .clear-button,
+        .download-button {
             padding: 10px 16px;
             border: none;
             border-radius: 6px;
@@ -83,6 +84,11 @@
 
         .clear-button {
             background: #6c757d;
+            color: #fff;
+        }
+
+        .download-button {
+            background: #2d7d46;
             color: #fff;
         }
 
@@ -198,6 +204,25 @@
             text-decoration: underline;
         }
 
+        .site-copyright {
+            margin: 18px 0 0;
+            text-align: center;
+            font-size: 0.88rem;
+            color: #7a7569;
+            letter-spacing: 0.5px;
+        }
+
+        .site-copyright a {
+            color: #2e5f93;
+            text-decoration: none;
+            border-bottom: 1px dashed rgba(46, 95, 147, 0.45);
+        }
+
+        .site-copyright a:hover {
+            color: #007bff;
+            border-bottom-color: rgba(0, 123, 255, 0.65);
+        }
+
         @media (max-width: 768px) {
             body {
                 margin: 10px;
@@ -242,6 +267,7 @@
             <input id="searchInput" class="search-input" type="text" placeholder="搜索菜名、食堂或供应时段...">
             <button class="search-button" onclick="applySearch()">搜索</button>
             <button class="clear-button" onclick="clearSearch()">清除</button>
+            <button class="download-button" onclick="downloadDatabaseCsv()">下载数据库（CSV）</button>
         </div>
         <div id="resultHint" class="result-hint"></div>
         <div id="status" class="loading">正在加载数据库...</div>
@@ -261,6 +287,9 @@
                 <!-- 数据将插入这里 -->
             </tbody>
         </table>
+
+        <footer class="site-copyright">&copy; 2026 PopulusYang 版权所有 | <a href="LICENSE" target="_blank"
+                rel="noopener noreferrer">MIT 协议</a></footer>
     </div>
 
     <script>
@@ -564,6 +593,57 @@
                 hint.textContent = `找到 ${rows.length} 条匹配结果：${currentQuery}`;
             } else {
                 hint.textContent = rows.length > 0 ? `共 ${rows.length} 条菜品记录` : '';
+            }
+        }
+
+        function escapeCsvCell(value) {
+            if (value === null || value === undefined) {
+                return '';
+            }
+
+            const text = String(value);
+            if (/[",\r\n]/.test(text)) {
+                return `"${text.replace(/"/g, '""')}"`;
+            }
+
+            return text;
+        }
+
+        function toCsv(columns, rows) {
+            const headerLine = columns.map(escapeCsvCell).join(',');
+            const dataLines = rows.map(row => columns.map((_, idx) => escapeCsvCell(row[idx])).join(','));
+            return [headerLine, ...dataLines].join('\r\n');
+        }
+
+        function buildCsvFileName() {
+            const now = new Date();
+            const pad = (n) => String(n).padStart(2, '0');
+            const stamp = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+            return `menu_db_${stamp}.csv`;
+        }
+
+        function downloadDatabaseCsv() {
+            if (!allColumns.length || !allRows.length) {
+                alert('数据库尚未加载完成，或当前没有可导出的数据。');
+                return;
+            }
+
+            try {
+                const csv = toCsv(allColumns, allRows);
+                const blob = new Blob(['\uFEFF', csv], { type: 'text/csv;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = buildCsvFileName();
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+
+                URL.revokeObjectURL(url);
+            } catch (err) {
+                console.error('导出 CSV 失败:', err);
+                alert(`导出失败：${err.message}`);
             }
         }
 
