@@ -243,6 +243,37 @@
             color: #8a4b22;
         }
 
+        .history-panel {
+            margin-top: 18px;
+            border-top: 1px dashed rgba(95, 121, 84, 0.28);
+            padding-top: 14px;
+            text-align: left;
+        }
+
+        .history-title {
+            margin: 0 0 8px;
+            color: #5d594f;
+            font-size: 0.96rem;
+            font-weight: 700;
+        }
+
+        .history-list {
+            margin: 0;
+            padding-left: 20px;
+            color: #5f5a50;
+        }
+
+        .history-item {
+            margin-bottom: 6px;
+            line-height: 1.5;
+        }
+
+        .history-empty {
+            margin: 0;
+            color: #7a7569;
+            font-size: 0.9rem;
+        }
+
         .hidden {
             display: none;
         }
@@ -335,6 +366,12 @@
                 <p class="detail-tip">部分网站可能限制嵌入显示，若空白请点击上方详情链接。</p>
             </div>
         </section>
+
+        <section class="history-panel" aria-live="polite">
+            <p class="history-title">随机记录（<span id="historyCount">0</span>/5）</p>
+            <ol id="historyList" class="history-list"></ol>
+            <p id="historyEmpty" class="history-empty">还没有摇过，先来一次试试。</p>
+        </section>
     </main>
 
     <script>
@@ -397,6 +434,9 @@
         let candidateDishes = [];
         let activeSlot = '';
         let rolling = false;
+        const MAX_ROLLS = 5;
+        let rollCount = 0;
+        const rollHistory = [];
 
         const blockedEmbedHosts = new Set([
             'mp.weixin.qq.com',
@@ -547,6 +587,62 @@
             return candidateDishes[randomIndex];
         }
 
+        function formatRollTime(dateObj) {
+            const pad = (n) => String(n).padStart(2, '0');
+            return `${pad(dateObj.getHours())}:${pad(dateObj.getMinutes())}:${pad(dateObj.getSeconds())}`;
+        }
+
+        function renderRollHistory() {
+            const historyCount = document.getElementById('historyCount');
+            const historyList = document.getElementById('historyList');
+            const historyEmpty = document.getElementById('historyEmpty');
+
+            historyCount.textContent = String(rollCount);
+            historyList.innerHTML = '';
+
+            if (!rollHistory.length) {
+                historyEmpty.classList.remove('hidden');
+                return;
+            }
+
+            historyEmpty.classList.add('hidden');
+            rollHistory.forEach((record, index) => {
+                const li = document.createElement('li');
+                li.className = 'history-item';
+                li.textContent = `第${index + 1}次 ${record.time} - ${record.name}（${record.canteen}，评分 ${record.rating}）`;
+                historyList.appendChild(li);
+            });
+        }
+
+        function appendRollHistory(dish) {
+            rollHistory.push({
+                name: dish.name,
+                canteen: dish.canteen,
+                rating: dish.rating,
+                time: formatRollTime(new Date())
+            });
+            renderRollHistory();
+        }
+
+        function updateRollButtonState() {
+            const rollButton = document.getElementById('rollButton');
+            if (!rollButton) return;
+
+            if (rolling) {
+                rollButton.disabled = true;
+                return;
+            }
+
+            if (rollCount >= MAX_ROLLS) {
+                rollButton.disabled = true;
+                rollButton.textContent = '就吃这个吧别犹豫了';
+                return;
+            }
+
+            rollButton.disabled = false;
+            rollButton.textContent = rollCount > 0 ? '不满意？再来一次！' : '吃啥？';
+        }
+
         function updateResult(dish) {
             const result = document.getElementById('result');
             const dishName = document.getElementById('dishName');
@@ -617,6 +713,10 @@
 
         async function rollDish() {
             if (rolling) return;
+            if (rollCount >= MAX_ROLLS) {
+                updateRollButtonState();
+                return;
+            }
 
             const rollButton = document.getElementById('rollButton');
             const latestSlot = getCurrentSlot();
@@ -626,18 +726,24 @@
 
             if (!candidateDishes.length) {
                 updateResult(null);
+                updateRollButtonState();
                 return;
             }
 
             rolling = true;
-            rollButton.disabled = true;
+            updateRollButtonState();
 
             await runRollingAnimation();
             const dish = pickRandomDish();
             updateResult(dish);
 
-            rollButton.disabled = false;
+            if (dish) {
+                rollCount += 1;
+                appendRollHistory(dish);
+            }
+
             rolling = false;
+            updateRollButtonState();
         }
 
         document.addEventListener('DOMContentLoaded', async () => {
@@ -648,6 +754,8 @@
             updateSlotHint();
             const rollButton = document.getElementById('rollButton');
             rollButton.addEventListener('click', rollDish);
+            renderRollHistory();
+            updateRollButtonState();
 
             await loadDishes();
 
