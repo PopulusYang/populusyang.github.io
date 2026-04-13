@@ -30,7 +30,7 @@ def init_db():
     if "meal_type" not in columns:
         print("Migrating: Adding 'meal_type' column...")
         cursor.execute(
-            "ALTER TABLE dishes ADD COLUMN meal_type TEXT DEFAULT '午餐,晚餐'"
+            "ALTER TABLE dishes ADD COLUMN meal_type TEXT DEFAULT '午餐;晚餐'"
         )
 
     if "official_link" not in columns:
@@ -84,7 +84,7 @@ def _parse_bool(v, default=True):
 
 def batch_add_from_csv(
     csv_file,
-    default_meal="午餐,晚餐",
+    default_meal="午餐;晚餐",
     default_link="",
     default_active=True,
     strict=False,
@@ -230,7 +230,7 @@ def list_dishes():
             link = row["official_link"] if "official_link" in row.keys() else ""
             active = row["is_active"] if "is_active" in row.keys() else 1
         except:
-            meal = "午餐,晚餐"
+            meal = "午餐;晚餐"
             link = ""
             active = 1
 
@@ -280,7 +280,7 @@ def run_gui():
     name_var = tk.StringVar()
     canteen_var = tk.StringVar()
     rating_var = tk.DoubleVar(value=4.0)
-    meal_var = tk.StringVar(value="午餐,晚餐")
+    meal_var = tk.StringVar(value="午餐;晚餐")
     link_var = tk.StringVar()
     is_active_var = tk.BooleanVar(value=True)
     current_edit_id = None
@@ -408,7 +408,7 @@ def run_gui():
         name_var.set("")
         canteen_var.set("")
         rating_var.set(4.0)
-        meal_var.set("午餐,晚餐")
+        meal_var.set("午餐;晚餐")
         link_var.set("")
         is_active_var.set(True)
 
@@ -506,7 +506,7 @@ def main():
     add_parser.add_argument("canteen", help="食堂名称")
     add_parser.add_argument("rating", type=float, help="评分 (0-5)")
     add_parser.add_argument(
-        "--meal", default="午餐,晚餐", help="供应时段 (默认: 午餐,晚餐)"
+        "--meal", default="午餐;晚餐", help="供应时段 (默认: 午餐;晚餐)"
     )
     add_parser.add_argument("--link", default="", help="公众号链接")
     add_parser.add_argument(
@@ -517,7 +517,7 @@ def main():
     batch_parser = subparsers.add_parser("batch-add", help="从 CSV 批量添加菜品")
     batch_parser.add_argument("file", help="CSV 文件路径")
     batch_parser.add_argument(
-        "--meal", default="午餐,晚餐", help="缺省供应时段 (默认: 午餐,晚餐)"
+        "--meal", default="午餐;晚餐", help="缺省供应时段 (默认: 午餐;晚餐)"
     )
     batch_parser.add_argument("--link", default="", help="缺省公众号链接")
     batch_parser.add_argument(
