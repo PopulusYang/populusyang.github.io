@@ -93,6 +93,91 @@
             color: #787263;
         }
 
+        .filter-panel {
+            margin: 0 0 12px;
+            padding: 12px 12px 10px;
+            border-radius: 14px;
+            background: rgba(229, 236, 216, 0.72);
+            border: 1px solid rgba(95, 121, 84, 0.18);
+        }
+
+        .filter-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 8px;
+        }
+
+        .filter-title {
+            margin: 0;
+            font-size: 0.96rem;
+            font-weight: 700;
+            color: #385040;
+        }
+
+        .filter-clear {
+            border: none;
+            background: rgba(47, 81, 54, 0.1);
+            color: #2f5136;
+            border-radius: 999px;
+            padding: 6px 12px;
+            font-size: 0.86rem;
+            cursor: pointer;
+            transition: transform 180ms ease, background 180ms ease, opacity 180ms ease;
+        }
+
+        .filter-clear:hover {
+            transform: translateY(-1px);
+            background: rgba(47, 81, 54, 0.16);
+        }
+
+        .filter-clear:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .filter-hint {
+            margin: 0 0 10px;
+            color: #6d685f;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+
+        .canteen-filter-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .canteen-chip {
+            border: 1px solid rgba(95, 121, 84, 0.24);
+            background: rgba(255, 255, 255, 0.88);
+            color: #385040;
+            border-radius: 999px;
+            padding: 7px 12px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: transform 180ms ease, border-color 180ms ease, background 180ms ease, color 180ms ease, box-shadow 180ms ease;
+        }
+
+        .canteen-chip:hover {
+            transform: translateY(-1px);
+            border-color: rgba(47, 81, 54, 0.38);
+        }
+
+        .canteen-chip[aria-pressed="true"] {
+            background: linear-gradient(120deg, #2f5136, #c9803a);
+            color: #fff;
+            border-color: transparent;
+            box-shadow: 0 8px 16px rgba(53, 82, 44, 0.18);
+        }
+
+        .canteen-chip[aria-pressed="true"]:hover {
+            filter: brightness(1.02);
+        }
+
         .status {
             text-align: center;
             color: #4a6a42;
@@ -362,6 +447,15 @@
         <p class="rule">时段规则：08:30 前为早餐，08:30-14:59 为午餐，15:00 后为晚餐。</p>
         <div id="status" class="status">正在加载数据库...</div>
 
+        <section class="filter-panel" aria-labelledby="canteenFilterTitle">
+            <div class="filter-head">
+                <p id="canteenFilterTitle" class="filter-title">排除食堂</p>
+                <button id="clearCanteenFilter" class="filter-clear" type="button">清空排除</button>
+            </div>
+            <p id="canteenFilterHint" class="filter-hint">正在加载食堂列表...</p>
+            <div id="canteenFilterList" class="canteen-filter-list" role="group" aria-label="可排除的食堂列表"></div>
+        </section>
+
         <div class="dice-wrap">
             <div id="dice" class="dice" aria-live="polite">
                 <div id="diceFace" class="dice-face">准备开摇</div>
@@ -454,11 +548,15 @@
         const dbFile = 'menu.db';
         let allDishes = [];
         let candidateDishes = [];
+        let availableCanteens = [];
+        let excludedCanteens = new Set();
         let activeSlot = '';
         let rolling = false;
         const MAX_ROLLS = 5;
         let rollCount = 0;
         const rollHistory = [];
+        const EXCLUDED_CANTEENS_STORAGE_KEY = 'hunterHutExcludedCanteens';
+        let dishesLoaded = false;
 
         const blockedEmbedHosts = new Set([
             'mp.weixin.qq.com',
@@ -472,6 +570,133 @@
             } catch (err) {
                 return false;
             }
+        }
+
+        function normalizeCanteenName(name) {
+            return String(name ?? '').trim();
+        }
+
+        function loadExcludedCanteens() {
+            try {
+                const stored = localStorage.getItem(EXCLUDED_CANTEENS_STORAGE_KEY);
+                if (!stored) {
+                    excludedCanteens = new Set();
+                    return;
+                }
+
+                const parsed = JSON.parse(stored);
+                if (!Array.isArray(parsed)) {
+                    excludedCanteens = new Set();
+                    return;
+                }
+
+                excludedCanteens = new Set(parsed.map(normalizeCanteenName).filter(Boolean));
+            } catch (err) {
+                excludedCanteens = new Set();
+            }
+        }
+
+        function saveExcludedCanteens() {
+            try {
+                localStorage.setItem(EXCLUDED_CANTEENS_STORAGE_KEY, JSON.stringify([...excludedCanteens]));
+            } catch (err) {
+                // 忽略无法写入本地存储的情况。
+            }
+        }
+
+        function getAvailableCanteens(dishes) {
+            return [...new Set(
+                dishes
+                    .map(item => normalizeCanteenName(item.canteen))
+                    .filter(Boolean)
+            )].sort((left, right) => left.localeCompare(right, 'zh-CN'));
+        }
+
+        function isCanteenExcluded(canteen) {
+            return excludedCanteens.has(normalizeCanteenName(canteen));
+        }
+
+        function syncExcludedCanteensToAvailable() {
+            if (!availableCanteens.length) {
+                return;
+            }
+
+            const availableSet = new Set(availableCanteens);
+            const nextExcluded = new Set([...excludedCanteens].filter(name => availableSet.has(name)));
+
+            if (nextExcluded.size !== excludedCanteens.size) {
+                excludedCanteens = nextExcluded;
+                saveExcludedCanteens();
+            }
+        }
+
+        function renderCanteenFilters() {
+            const filterList = document.getElementById('canteenFilterList');
+            const filterHint = document.getElementById('canteenFilterHint');
+            const clearButton = document.getElementById('clearCanteenFilter');
+
+            if (!filterList || !filterHint || !clearButton) {
+                return;
+            }
+
+            filterList.innerHTML = '';
+            clearButton.disabled = !excludedCanteens.size;
+
+            if (!dishesLoaded) {
+                filterHint.textContent = excludedCanteens.size
+                    ? `已保存 ${excludedCanteens.size} 个排除项，正在加载食堂列表...`
+                    : '正在加载食堂列表...';
+                return;
+            }
+
+            if (!availableCanteens.length) {
+                filterHint.textContent = allDishes.length
+                    ? '当前没有可用的食堂筛选项。'
+                    : '数据库中暂无食堂数据。';
+                return;
+            }
+
+            filterHint.textContent = excludedCanteens.size
+                ? `已排除 ${excludedCanteens.size} 个食堂，点击按钮可恢复。`
+                : '点击食堂按钮即可排除该食堂。';
+
+            const fragment = document.createDocumentFragment();
+            availableCanteens.forEach(canteen => {
+                const chip = document.createElement('button');
+                const excluded = excludedCanteens.has(canteen);
+
+                chip.type = 'button';
+                chip.className = 'canteen-chip';
+                chip.setAttribute('aria-pressed', excluded ? 'true' : 'false');
+                chip.setAttribute('title', excluded ? `点击恢复 ${canteen}` : `点击排除 ${canteen}`);
+                chip.textContent = canteen;
+                chip.addEventListener('click', () => {
+                    if (excludedCanteens.has(canteen)) {
+                        excludedCanteens.delete(canteen);
+                    } else {
+                        excludedCanteens.add(canteen);
+                    }
+
+                    saveExcludedCanteens();
+                    renderCanteenFilters();
+                    refreshCandidates();
+                });
+
+                fragment.appendChild(chip);
+            });
+
+            filterList.appendChild(fragment);
+        }
+
+        function clearCanteenExclusions() {
+            if (!excludedCanteens.size) {
+                return;
+            }
+
+            excludedCanteens.clear();
+            saveExcludedCanteens();
+            renderCanteenFilters();
+            refreshCandidates();
         }
 
         function getCurrentSlot(now = new Date()) {
@@ -562,6 +787,10 @@
                 if (!result.length) {
                     allDishes = [];
                     candidateDishes = [];
+                    availableCanteens = [];
+                    dishesLoaded = true;
+                    renderCanteenFilters();
+                    updateRollButtonState();
                     status.className = 'status warning';
                     status.textContent = '数据库为空，暂时没有可抽取的菜品。';
                     db.close();
@@ -574,13 +803,22 @@
                     .map(row => buildDishFromRow(row, columns))
                     .filter(item => item.name);
 
+                availableCanteens = getAvailableCanteens(allDishes);
+                syncExcludedCanteensToAvailable();
+                dishesLoaded = true;
+
                 db.close();
 
+                renderCanteenFilters();
                 refreshCandidates();
             } catch (err) {
                 console.error(err);
                 allDishes = [];
                 candidateDishes = [];
+                availableCanteens = [];
+                dishesLoaded = true;
+                renderCanteenFilters();
+                updateRollButtonState();
                 status.className = 'status warning';
                 status.textContent = `加载失败：${err.message}`;
             }
@@ -591,16 +829,18 @@
             updateSlotHint();
 
             const activeDishes = allDishes.filter(item => item.isActive);
-            candidateDishes = activeDishes.filter(item => dishSupportsSlot(item, activeSlot));
+            candidateDishes = activeDishes.filter(item => dishSupportsSlot(item, activeSlot) && !isCanteenExcluded(item.canteen));
 
             if (!candidateDishes.length) {
                 status.className = 'status warning';
-                status.textContent = `当前时段（${activeSlot}）没有可抽取菜品。`;
+                status.textContent = `当前时段（${activeSlot}）${excludedCanteens.size ? `在排除 ${excludedCanteens.size} 个食堂后` : ''}没有可抽取菜品。`;
+                updateRollButtonState();
                 return;
             }
 
             status.className = 'status';
-            status.textContent = `已载入 ${candidateDishes.length} 道${activeSlot}菜品，可开始摇骰子。`;
+            status.textContent = `已载入 ${candidateDishes.length} 道${activeSlot}菜品${excludedCanteens.size ? `，已排除 ${excludedCanteens.size} 个食堂` : ''}，可开始摇骰子。`;
+            updateRollButtonState();
         }
 
         function pickRandomDish() {
@@ -658,6 +898,12 @@
             if (rollCount >= MAX_ROLLS) {
                 rollButton.disabled = true;
                 rollButton.textContent = '就吃这个吧别犹豫了';
+                return;
+            }
+
+            if (!candidateDishes.length) {
+                rollButton.disabled = true;
+                rollButton.textContent = allDishes.length ? '当前无可选菜品' : '暂无菜品';
                 return;
             }
 
@@ -773,9 +1019,13 @@
                 return;
             }
 
+            loadExcludedCanteens();
             updateSlotHint();
+            renderCanteenFilters();
             const rollButton = document.getElementById('rollButton');
             rollButton.addEventListener('click', rollDish);
+            const clearCanteenFilterButton = document.getElementById('clearCanteenFilter');
+            clearCanteenFilterButton.addEventListener('click', clearCanteenExclusions);
             renderRollHistory();
             updateRollButtonState();
 
