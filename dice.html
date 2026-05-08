@@ -291,6 +291,26 @@
             justify-content: center;
             padding: 14px;
             transform-style: preserve-3d;
+            cursor: pointer;
+            transition: transform 180ms ease, filter 180ms ease, box-shadow 180ms ease;
+        }
+
+        .dice:hover {
+            filter: brightness(1.02);
+        }
+
+        .dice:focus-visible {
+            outline: 3px solid rgba(47, 81, 54, 0.28);
+            outline-offset: 4px;
+        }
+
+        .roll-limit-hint {
+            min-height: 1.4em;
+            margin: 10px 0 0;
+            text-align: center;
+            font-size: 0.98rem;
+            font-weight: 700;
+            color: #8a4b22;
         }
 
         .dice.rolling {
@@ -530,6 +550,14 @@
         <p id="dbMeta" class="db-meta"></p>
         <div id="status" class="status">正在加载数据库...</div>
 
+        <div class="dice-wrap">
+            <div id="dice" class="dice" aria-live="polite" role="button" tabindex="0" aria-label="点击骰子开始摇菜">
+                <div id="diceFace" class="dice-face">准备开摇</div>
+            </div>
+        </div>
+
+        <p id="rollLimitHint" class="roll-limit-hint" aria-live="polite"></p>
+
         <section class="filter-panel" aria-labelledby="canteenFilterTitle">
             <div class="filter-head">
                 <p id="canteenFilterTitle" class="filter-title">排除食堂</p>
@@ -556,16 +584,6 @@
                 </div>
             </div>
         </section>
-
-        <div class="dice-wrap">
-            <div id="dice" class="dice" aria-live="polite">
-                <div id="diceFace" class="dice-face">准备开摇</div>
-            </div>
-        </div>
-
-        <div class="actions">
-            <button id="rollButton" class="roll-btn" type="button">吃啥？</button>
-        </div>
 
         <section id="result" class="result hidden" aria-live="polite">
             <h2 id="dishName"></h2>
@@ -1116,28 +1134,15 @@
         }
 
         function updateRollButtonState() {
-            const rollButton = document.getElementById('rollButton');
-            if (!rollButton) return;
-
-            if (rolling) {
-                rollButton.disabled = true;
-                return;
-            }
+            const rollLimitHint = document.getElementById('rollLimitHint');
+            if (!rollLimitHint) return;
 
             if (rollCount >= MAX_ROLLS) {
-                rollButton.disabled = true;
-                rollButton.textContent = '就吃这个吧别犹豫了';
+                rollLimitHint.textContent = '别犹豫了就吃这个吧';
                 return;
             }
 
-            if (!candidateDishes.length) {
-                rollButton.disabled = true;
-                rollButton.textContent = allDishes.length ? '当前无可选菜品' : '暂无菜品';
-                return;
-            }
-
-            rollButton.disabled = false;
-            rollButton.textContent = rollCount > 0 ? '不满意？再来一次！' : '吃啥？';
+            rollLimitHint.textContent = '';
         }
 
         function updateResult(dish) {
@@ -1214,8 +1219,6 @@
                 updateRollButtonState();
                 return;
             }
-
-            const rollButton = document.getElementById('rollButton');
             const latestSlot = getCurrentSlot();
             if (latestSlot !== activeSlot) {
                 refreshCandidates();
@@ -1252,8 +1255,14 @@
             syncScoreFilterInputs();
             updateSlotHint();
             renderCanteenFilters();
-            const rollButton = document.getElementById('rollButton');
-            rollButton.addEventListener('click', rollDish);
+            const dice = document.getElementById('dice');
+            dice.addEventListener('click', rollDish);
+            dice.addEventListener('keydown', (event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    rollDish();
+                }
+            });
             const clearCanteenFilterButton = document.getElementById('clearCanteenFilter');
             clearCanteenFilterButton.addEventListener('click', clearCanteenExclusions);
             const applyScoreFilterButton = document.getElementById('applyScoreFilter');
