@@ -1,0 +1,248 @@
+body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f9;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+
+        .container {
+            max-width: 950px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .page-nav {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 8px;
+        }
+
+        .page-link {
+            display: inline-block;
+            padding: 8px 12px;
+            border-radius: 999px;
+            text-decoration: none;
+            color: #fff;
+            background: #5f6c57;
+            font-size: 13px;
+        }
+
+        .page-link:hover {
+            opacity: 0.92;
+        }
+
+        .toolbar {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+
+        .search-input {
+            flex: 1;
+            min-width: 220px;
+            padding: 10px 12px;
+            border: 1px solid #ced4da;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .search-button,
+        .clear-button,
+        .download-button {
+            padding: 10px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .search-button {
+            background: #007bff;
+            color: #fff;
+        }
+
+        .clear-button {
+            background: #6c757d;
+            color: #fff;
+        }
+
+        .download-button {
+            background: #2d7d46;
+            color: #fff;
+        }
+
+        .result-hint {
+            margin-top: 10px;
+            color: #666;
+            font-size: 0.95rem;
+        }
+
+        .db-meta {
+            margin: 8px 0 0;
+            text-align: center;
+            color: #6d685f;
+            font-size: 0.92rem;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th,
+        td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #007bff;
+            color: white;
+        }
+
+        th.sortable-header {
+            cursor: pointer;
+            user-select: none;
+            position: relative;
+            padding-right: 24px;
+        }
+
+        th.sortable-header::after {
+            content: '↕';
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 12px;
+            opacity: 0.6;
+        }
+
+        th.sortable-header.sort-asc::after {
+            content: '↑';
+            opacity: 1;
+        }
+
+        th.sortable-header.sort-desc::after {
+            content: '↓';
+            opacity: 1;
+        }
+
+        tr:hover {
+            background-color: #f1f1f1;
+        }
+
+        .loading {
+            text-align: center;
+            font-style: italic;
+            color: #666;
+        }
+
+        .error {
+            color: red;
+            text-align: center;
+        }
+
+        /* New Styles */
+        .status-closed-row {
+            color: #999;
+            background-color: #fafafa;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            color: white;
+            font-weight: bold;
+            text-align: center;
+            min-width: 40px;
+        }
+
+        .badge-active {
+            background-color: #28a745;
+        }
+
+        .badge-closed {
+            background-color: #6c757d;
+        }
+
+        .meal-tag {
+            background-color: #e9ecef;
+            color: #495057;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.85em;
+            margin-right: 4px;
+            display: inline-block;
+            border: 1px solid #dee2e6;
+        }
+
+        a.official-link {
+            color: #007bff;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        a.official-link:hover {
+            text-decoration: underline;
+        }
+
+        .site-copyright {
+            margin: 18px 0 0;
+            text-align: center;
+            font-size: 0.88rem;
+            color: #7a7569;
+            letter-spacing: 0.5px;
+        }
+
+        .site-copyright a {
+            color: #2e5f93;
+            text-decoration: none;
+            border-bottom: 1px dashed rgba(46, 95, 147, 0.45);
+        }
+
+        .site-copyright a:hover {
+            color: #007bff;
+            border-bottom-color: rgba(0, 123, 255, 0.65);
+        }
+
+        @media (max-width: 768px) {
+            body {
+                margin: 10px;
+            }
+
+            .container {
+                padding: 12px;
+            }
+
+            th,
+            td {
+                padding: 10px 8px;
+                font-size: 14px;
+            }
+
+            /* 手机端仅保留：菜品名称(2)、评分(4)、详情(7) */
+            #menuTable th:nth-child(1),
+            #menuTable td:nth-child(1),
+            #menuTable th:nth-child(3),
+            #menuTable td:nth-child(3),
+            #menuTable th:nth-child(5),
+            #menuTable td:nth-child(5),
+            #menuTable th:nth-child(6),
+            #menuTable td:nth-child(6) {
+                display: none;
+            }
+        }
