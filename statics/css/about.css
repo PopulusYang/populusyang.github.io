@@ -254,12 +254,36 @@ h1 {
 }
 
 @media (max-width: 720px) {
+    body {
+        align-items: flex-start;
+        justify-content: stretch;
+        padding: 12px;
+    }
+
     .panel {
-        padding: 24px 16px;
+        width: 100%;
+        padding: 20px 14px;
         border-radius: 14px;
     }
 
     .content-grid {
         grid-template-columns: 1fr;
+    }
+
+    .author-item {
+        grid-template-columns: 1fr;
+    }
+
+    .author-photo {
+        max-width: 180px;
+        justify-self: center;
+    }
+
+    .top-links {
+        gap: 8px;
+    }
+
+    .top-link {
+        padding: 7px 12px;
     }
 }
