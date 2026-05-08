@@ -98,6 +98,13 @@
             font-size: 0.95rem;
         }
 
+        .db-meta {
+            margin: 8px 0 0;
+            text-align: center;
+            color: #6d685f;
+            font-size: 0.92rem;
+        }
+
         table {
             width: 100%;
             border-collapse: collapse;
@@ -270,6 +277,7 @@
             <button class="download-button" onclick="downloadDatabaseCsv()">下载数据库（CSV）</button>
         </div>
         <div id="resultHint" class="result-hint"></div>
+        <div id="dbMeta" class="db-meta"></div>
         <div id="status" class="loading">正在加载数据库...</div>
         <table id="menuTable" style="display: none;">
             <thead>
@@ -352,8 +360,38 @@
         let allColumns = [];
         let currentQuery = "";
         let currentSort = { key: null, direction: 'asc' };
+        let databaseLastUpdated = '';
 
         const numericSortKeys = new Set(['id', 'rating', 'is_active']);
+
+        function getDatabaseLastUpdated(db) {
+            try {
+                const tableInfo = db.exec('PRAGMA table_info(dishes)');
+                if (!tableInfo.length || !tableInfo[0].values.some(row => String(row[1]) === 'updated_at')) {
+                    return '';
+                }
+
+                const result = db.exec('SELECT MAX(updated_at) AS last_updated FROM dishes');
+                if (!result.length || !result[0].values.length) {
+                    return '';
+                }
+
+                return String(result[0].values[0][0] ?? '').trim();
+            } catch (err) {
+                return '';
+            }
+        }
+
+        function updateDatabaseMeta() {
+            const meta = document.getElementById('dbMeta');
+            if (!meta) {
+                return;
+            }
+
+            meta.textContent = databaseLastUpdated
+                ? `数据库最后更新时间：${databaseLastUpdated}`
+                : '数据库最后更新时间：暂不可用';
+        }
 
         async function loadDatabase() {
             if (!APP_VERSION) {
@@ -377,6 +415,8 @@
 
                 const buffer = await response.arrayBuffer();
                 const db = new SQL.Database(new Uint8Array(buffer));
+                databaseLastUpdated = getDatabaseLastUpdated(db);
+                updateDatabaseMeta();
 
                 // 查询数据
                 let result;
@@ -404,6 +444,8 @@
 
             } catch (err) {
                 console.error(err);
+                databaseLastUpdated = '';
+                updateDatabaseMeta();
                 document.getElementById('status').textContent = "加载失败: " + err.message;
                 document.getElementById('status').className = "error";
             }

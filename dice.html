@@ -93,6 +93,13 @@
             color: #787263;
         }
 
+        .db-meta {
+            margin: 4px 0 10px;
+            text-align: center;
+            font-size: 0.92rem;
+            color: #6d685f;
+        }
+
         .filter-panel {
             margin: 0 0 12px;
             padding: 12px 12px 10px;
@@ -143,6 +150,81 @@
             color: #6d685f;
             font-size: 0.9rem;
             line-height: 1.5;
+        }
+
+        .score-filter {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px dashed rgba(95, 121, 84, 0.22);
+        }
+
+        .score-filter-title {
+            margin: 0 0 8px;
+            font-size: 0.96rem;
+            font-weight: 700;
+            color: #385040;
+        }
+
+        .score-filter-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .score-filter-field {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .score-filter-field label {
+            font-size: 0.88rem;
+            color: #5f5a50;
+        }
+
+        .score-filter-field input {
+            width: 100%;
+            border: 1px solid rgba(95, 121, 84, 0.24);
+            border-radius: 10px;
+            padding: 9px 10px;
+            font-size: 0.96rem;
+            background: rgba(255, 255, 255, 0.9);
+            color: #2f2a22;
+        }
+
+        .score-filter-field input:focus {
+            outline: 2px solid rgba(47, 81, 54, 0.18);
+            border-color: rgba(47, 81, 54, 0.38);
+        }
+
+        .score-filter-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .score-filter-button {
+            border: none;
+            border-radius: 999px;
+            padding: 7px 12px;
+            cursor: pointer;
+            font-size: 0.88rem;
+            transition: transform 180ms ease, opacity 180ms ease, background 180ms ease;
+        }
+
+        .score-filter-button:hover {
+            transform: translateY(-1px);
+        }
+
+        .score-apply {
+            background: #2f5136;
+            color: #fff;
+        }
+
+        .score-clear {
+            background: rgba(47, 81, 54, 0.1);
+            color: #2f5136;
         }
 
         .canteen-filter-list {
@@ -445,6 +527,7 @@
         <h1>今天吃什么</h1>
         <p id="slotHint" class="slot-hint">正在判断时段...</p>
         <p class="rule">时段规则：08:30 前为早餐，08:30-14:59 为午餐，15:00 后为晚餐。</p>
+        <p id="dbMeta" class="db-meta"></p>
         <div id="status" class="status">正在加载数据库...</div>
 
         <section class="filter-panel" aria-labelledby="canteenFilterTitle">
@@ -454,6 +537,24 @@
             </div>
             <p id="canteenFilterHint" class="filter-hint">正在加载食堂列表...</p>
             <div id="canteenFilterList" class="canteen-filter-list" role="group" aria-label="可排除的食堂列表"></div>
+            <div class="score-filter" aria-labelledby="scoreFilterTitle">
+                <p id="scoreFilterTitle" class="score-filter-title">评分筛选</p>
+                <div class="score-filter-grid">
+                    <div class="score-filter-field">
+                        <label for="scoreMinInput">最低评分</label>
+                        <input id="scoreMinInput" type="number" min="0" max="5" step="0.1" placeholder="0.0">
+                    </div>
+                    <div class="score-filter-field">
+                        <label for="scoreMaxInput">最高评分</label>
+                        <input id="scoreMaxInput" type="number" min="0" max="5" step="0.1" placeholder="5.0">
+                    </div>
+                </div>
+                <p id="scoreFilterHint" class="filter-hint">默认显示 0 到 5 分的全部菜品。</p>
+                <div class="score-filter-actions">
+                    <button id="applyScoreFilter" class="score-filter-button score-apply" type="button">应用评分筛选</button>
+                    <button id="clearScoreFilter" class="score-filter-button score-clear" type="button">清空评分筛选</button>
+                </div>
+            </div>
         </section>
 
         <div class="dice-wrap">
@@ -557,6 +658,8 @@
         const rollHistory = [];
         const EXCLUDED_CANTEENS_STORAGE_KEY = 'hunterHutExcludedCanteens';
         let dishesLoaded = false;
+        let databaseLastUpdated = '';
+        let scoreFilter = { min: 0, max: 5 };
 
         const blockedEmbedHosts = new Set([
             'mp.weixin.qq.com',
@@ -610,6 +713,127 @@
                     .map(item => normalizeCanteenName(item.canteen))
                     .filter(Boolean)
             )].sort((left, right) => left.localeCompare(right, 'zh-CN'));
+        }
+
+        function normalizeRatingValue(value) {
+            const rating = Number(value);
+            return Number.isFinite(rating) ? rating : null;
+        }
+
+        function normalizeScoreBounds(minValue, maxValue) {
+            const minRaw = String(minValue ?? '').trim();
+            const maxRaw = String(maxValue ?? '').trim();
+            const min = minRaw === '' ? null : Number(minRaw);
+            const max = maxRaw === '' ? null : Number(maxRaw);
+
+            return {
+                min: Number.isFinite(min) ? Math.min(5, Math.max(0, min)) : null,
+                max: Number.isFinite(max) ? Math.min(5, Math.max(0, max)) : null
+            };
+        }
+
+        function getScoreFilterSummary() {
+            const hasMin = scoreFilter.min !== null && scoreFilter.min !== undefined;
+            const hasMax = scoreFilter.max !== null && scoreFilter.max !== undefined;
+
+            if (!hasMin && !hasMax) {
+                return '评分筛选：未设置，显示全部评分';
+            }
+
+            const minText = hasMin ? scoreFilter.min.toFixed(1) : '0.0';
+            const maxText = hasMax ? scoreFilter.max.toFixed(1) : '5.0';
+            return `评分筛选：${minText} - ${maxText}`;
+        }
+
+        function updateScoreFilterHint() {
+            const hint = document.getElementById('scoreFilterHint');
+            if (hint) {
+                hint.textContent = getScoreFilterSummary();
+            }
+        }
+
+        function syncScoreFilterInputs() {
+            const minInput = document.getElementById('scoreMinInput');
+            const maxInput = document.getElementById('scoreMaxInput');
+
+            if (minInput) {
+                minInput.value = scoreFilter.min === null || scoreFilter.min === undefined ? '' : String(scoreFilter.min);
+            }
+
+            if (maxInput) {
+                maxInput.value = scoreFilter.max === null || scoreFilter.max === undefined ? '' : String(scoreFilter.max);
+            }
+
+            updateScoreFilterHint();
+        }
+
+        function applyScoreFilterFromInputs() {
+            const minInput = document.getElementById('scoreMinInput');
+            const maxInput = document.getElementById('scoreMaxInput');
+            const nextFilter = normalizeScoreBounds(minInput ? minInput.value : '', maxInput ? maxInput.value : '');
+
+            if (nextFilter.min !== null && nextFilter.max !== null && nextFilter.min > nextFilter.max) {
+                const status = document.getElementById('status');
+                status.className = 'status warning';
+                status.textContent = '评分筛选无效：最低评分不能高于最高评分。';
+                return;
+            }
+
+            scoreFilter = nextFilter;
+            syncScoreFilterInputs();
+            refreshCandidates();
+        }
+
+        function clearScoreFilter() {
+            scoreFilter = { min: 0, max: 5 };
+            syncScoreFilterInputs();
+            refreshCandidates();
+        }
+
+        function dishMatchesScoreFilter(dish) {
+            const rating = normalizeRatingValue(dish.ratingValue);
+            if (rating === null) {
+                return false;
+            }
+
+            if (scoreFilter.min !== null && rating < scoreFilter.min) {
+                return false;
+            }
+
+            if (scoreFilter.max !== null && rating > scoreFilter.max) {
+                return false;
+            }
+
+            return true;
+        }
+
+        function getDatabaseLastUpdated(db) {
+            try {
+                const tableInfo = db.exec('PRAGMA table_info(dishes)');
+                if (!tableInfo.length || !tableInfo[0].values.some(row => String(row[1]) === 'updated_at')) {
+                    return '';
+                }
+
+                const result = db.exec('SELECT MAX(updated_at) AS last_updated FROM dishes');
+                if (!result.length || !result[0].values.length) {
+                    return '';
+                }
+
+                return String(result[0].values[0][0] ?? '').trim();
+            } catch (err) {
+                return '';
+            }
+        }
+
+        function updateDatabaseMeta() {
+            const meta = document.getElementById('dbMeta');
+            if (!meta) {
+                return;
+            }
+
+            meta.textContent = databaseLastUpdated
+                ? `数据库最后更新时间：${databaseLastUpdated}`
+                : '数据库最后更新时间：暂不可用';
         }
 
         function isCanteenExcluded(canteen) {
@@ -738,7 +962,8 @@
             const canteen = String(read('canteen') ?? '未知食堂').trim();
             const ratingRaw = read('rating');
             const ratingNum = Number(ratingRaw);
-            const rating = Number.isFinite(ratingNum) ? ratingNum.toFixed(1) : '-';
+            const ratingValue = Number.isFinite(ratingNum) ? ratingNum : null;
+            const rating = ratingValue === null ? '-' : ratingValue.toFixed(1);
             const mealType = String(read('meal_type') ?? '午餐,晚餐').trim();
             const officialLinkRaw = String(read('official_link') ?? '').trim();
             const officialLink = officialLinkRaw
@@ -749,7 +974,7 @@
             const isActiveRaw = read('is_active');
             const isActive = isActiveRaw === null || isActiveRaw === undefined ? true : Number(isActiveRaw) !== 0;
 
-            return { id, name, canteen, rating, mealType, officialLink, isActive };
+            return { id, name, canteen, rating, ratingValue, mealType, officialLink, isActive };
         }
 
         async function loadDishes() {
@@ -775,6 +1000,8 @@
 
                 const buffer = await response.arrayBuffer();
                 const db = new SQL.Database(new Uint8Array(buffer));
+                databaseLastUpdated = getDatabaseLastUpdated(db);
+                updateDatabaseMeta();
 
                 let result;
                 try {
@@ -817,6 +1044,8 @@
                 candidateDishes = [];
                 availableCanteens = [];
                 dishesLoaded = true;
+                databaseLastUpdated = '';
+                updateDatabaseMeta();
                 renderCanteenFilters();
                 updateRollButtonState();
                 status.className = 'status warning';
@@ -829,11 +1058,11 @@
             updateSlotHint();
 
             const activeDishes = allDishes.filter(item => item.isActive);
-            candidateDishes = activeDishes.filter(item => dishSupportsSlot(item, activeSlot) && !isCanteenExcluded(item.canteen));
+            candidateDishes = activeDishes.filter(item => dishMatchesScoreFilter(item) && dishSupportsSlot(item, activeSlot) && !isCanteenExcluded(item.canteen));
 
             if (!candidateDishes.length) {
                 status.className = 'status warning';
-                status.textContent = `当前时段（${activeSlot}）${excludedCanteens.size ? `在排除 ${excludedCanteens.size} 个食堂后` : ''}没有可抽取菜品。`;
+                status.textContent = `当前时段（${activeSlot}）${excludedCanteens.size ? `在排除 ${excludedCanteens.size} 个食堂后` : ''}${scoreFilter.min !== null || scoreFilter.max !== null ? '在当前评分筛选下' : ''}没有可抽取菜品。`;
                 updateRollButtonState();
                 return;
             }
@@ -1020,12 +1249,21 @@
             }
 
             loadExcludedCanteens();
+            syncScoreFilterInputs();
             updateSlotHint();
             renderCanteenFilters();
             const rollButton = document.getElementById('rollButton');
             rollButton.addEventListener('click', rollDish);
             const clearCanteenFilterButton = document.getElementById('clearCanteenFilter');
             clearCanteenFilterButton.addEventListener('click', clearCanteenExclusions);
+            const applyScoreFilterButton = document.getElementById('applyScoreFilter');
+            applyScoreFilterButton.addEventListener('click', applyScoreFilterFromInputs);
+            const clearScoreFilterButton = document.getElementById('clearScoreFilter');
+            clearScoreFilterButton.addEventListener('click', clearScoreFilter);
+            const scoreMinInput = document.getElementById('scoreMinInput');
+            const scoreMaxInput = document.getElementById('scoreMaxInput');
+            scoreMinInput.addEventListener('change', applyScoreFilterFromInputs);
+            scoreMaxInput.addEventListener('change', applyScoreFilterFromInputs);
             renderRollHistory();
             updateRollButtonState();
 

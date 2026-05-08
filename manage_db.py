@@ -4,7 +4,6 @@ import os
 import sys
 import csv
 
-
 DB_FILE = "menu.db"
 
 
@@ -12,16 +11,15 @@ def init_db():
     conn = sqlite3.connect(DB_FILE)
     cursor = conn.cursor()
     # 基础表结构
-    cursor.execute(
-        """
+    cursor.execute("""
         CREATE TABLE IF NOT EXISTS dishes (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT NOT NULL,
             canteen TEXT NOT NULL,
-            rating REAL
+            rating REAL,
+            updated_at TEXT DEFAULT CURRENT_TIMESTAMP
         )
-    """
-    )
+    """)
 
     # 检查并添加新列 (Schema Migration)
     cursor.execute("PRAGMA table_info(dishes)")
@@ -41,6 +39,14 @@ def init_db():
         print("Migrating: Adding 'is_active' column...")
         cursor.execute("ALTER TABLE dishes ADD COLUMN is_active INTEGER DEFAULT 1")
 
+    if "updated_at" not in columns:
+        print("Migrating: Adding 'updated_at' column...")
+        cursor.execute("ALTER TABLE dishes ADD COLUMN updated_at TEXT")
+
+    cursor.execute(
+        "UPDATE dishes SET updated_at = CURRENT_TIMESTAMP WHERE updated_at IS NULL OR updated_at = ''"
+    )
+
     conn.commit()
     conn.close()
 
@@ -49,7 +55,7 @@ def db_add_dish(name, canteen, rating, meal_type, official_link, is_active):
     conn = sqlite3.connect(DB_FILE)
     cursor = conn.cursor()
     cursor.execute(
-        "INSERT INTO dishes (name, canteen, rating, meal_type, official_link, is_active) VALUES (?, ?, ?, ?, ?, ?)",
+        "INSERT INTO dishes (name, canteen, rating, meal_type, official_link, is_active, updated_at) VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)",
         (name, canteen, rating, meal_type, official_link, 1 if is_active else 0),
     )
     conn.commit()
@@ -60,7 +66,7 @@ def db_add_dishes_batch(records):
     conn = sqlite3.connect(DB_FILE)
     cursor = conn.cursor()
     cursor.executemany(
-        "INSERT INTO dishes (name, canteen, rating, meal_type, official_link, is_active) VALUES (?, ?, ?, ?, ?, ?)",
+        "INSERT INTO dishes (name, canteen, rating, meal_type, official_link, is_active, updated_at) VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)",
         records,
     )
     conn.commit()
@@ -121,7 +127,9 @@ def batch_add_from_csv(
                 if rating < 0 or rating > 5:
                     raise ValueError("rating 必须在 0-5 之间")
 
-                meal = str(row.get("meal_type") or row.get("meal") or default_meal).strip()
+                meal = str(
+                    row.get("meal_type") or row.get("meal") or default_meal
+                ).strip()
                 link = str(
                     row.get("official_link") or row.get("link") or default_link
                 ).strip()
@@ -163,7 +171,7 @@ def db_update_dish(dish_id, name, canteen, rating, meal_type, official_link, is_
     cursor.execute(
         """
         UPDATE dishes
-        SET name=?, canteen=?, rating=?, meal_type=?, official_link=?, is_active=?
+        SET name=?, canteen=?, rating=?, meal_type=?, official_link=?, is_active=?, updated_at=CURRENT_TIMESTAMP
         WHERE id=?
         """,
         (
