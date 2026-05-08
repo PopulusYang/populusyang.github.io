@@ -89,4 +89,38 @@ git push
 * `reviewed.html`: 已评测页面，负责加载和显示菜品评分数据（含搜索/排序）。
 * `dice.html`: 今天吃什么页面，按当前时段随机抽取数据库菜品。
 * `manage_db.py`: 管理脚本，用于本地生成和修改 `menu.db`。
+* `links.json`: 友情链接数据文件，由首页底部自动读取。
+* `manage_links.py`: 友情链接管理脚本，用于增删改查和调整顺序。
 * `menu.db`: SQLite 数据库文件（由脚本生成）。
+
+## 友情链接管理
+
+友情链接由 `links.json` 提供，首页会自动加载并渲染到底部。
+
+字段结构：
+
+```json
+{
+  "link": "https://example.com",
+  "name": "示例站点",
+  "icon_path": "icon.png"
+}
+```
+
+其中 `icon_path` 可省略。
+
+常用命令：
+
+```bash
+python manage_links.py list
+python manage_links.py add "示例站点" "https://example.com" --icon-path "icon.png"
+python manage_links.py update 1 --name "新名称"
+python manage_links.py delete 1
+python manage_links.py move 2 1
+```
+
+如果 `links.json` 还不存在，可以先执行：
+
+```bash
+python manage_links.py init
+```

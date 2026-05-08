@@ -106,6 +106,105 @@
             font-size: 0.96rem;
         }
 
+        .hidden {
+            display: none;
+        }
+
+        .friends-section {
+            margin-top: 18px;
+            padding: 14px 14px 10px;
+            border-radius: 14px;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.78), rgba(250, 246, 236, 0.9));
+            border: 1px solid rgba(63, 111, 75, 0.16);
+        }
+
+        .friends-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            gap: 12px;
+            margin-bottom: 8px;
+            flex-wrap: wrap;
+        }
+
+        .friends-title {
+            margin: 0;
+            font-size: 1rem;
+            color: #2f4f38;
+            font-weight: 700;
+        }
+
+        .friends-hint {
+            margin: 0;
+            color: #7a7569;
+            font-size: 0.84rem;
+        }
+
+        .friends-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 10px;
+        }
+
+        .friend-card {
+            display: block;
+            text-decoration: none;
+            color: var(--ink);
+            border-radius: 12px;
+            padding: 11px 12px;
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid rgba(63, 111, 75, 0.16);
+            box-shadow: 0 5px 14px rgba(32, 48, 37, 0.05);
+            transition: transform 220ms ease, box-shadow 220ms ease, border-color 220ms ease;
+        }
+
+        .friend-card-content {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .friend-icon {
+            width: clamp(34px, 3.4vw, 42px);
+            height: clamp(34px, 3.4vw, 42px);
+            flex: 0 0 auto;
+            border-radius: 10px;
+            object-fit: contain;
+            background: rgba(63, 111, 75, 0.08);
+            border: 1px solid rgba(63, 111, 75, 0.12);
+            padding: 4px;
+        }
+
+        .friend-text {
+            min-width: 0;
+        }
+
+        .friend-card:hover {
+            transform: translateY(-3px);
+            border-color: rgba(201, 119, 50, 0.42);
+            box-shadow: 0 12px 24px rgba(32, 48, 37, 0.12);
+        }
+
+        .friend-name {
+            margin: 0 0 6px;
+            font-size: 0.96rem;
+            color: #2f4f38;
+            font-weight: 700;
+        }
+
+        .friend-desc {
+            margin: 0;
+            font-size: 0.84rem;
+            line-height: 1.45;
+            color: #625d55;
+        }
+
+        .friends-empty {
+            margin: 0;
+            color: #7a7569;
+            font-size: 0.88rem;
+        }
+
         .site-copyright {
             margin: 24px 0 0;
             text-align: center;
@@ -147,12 +246,16 @@
 
         @media (max-width: 640px) {
             .panel {
-                padding: 24px 16px;
+                padding: 22px 14px;
                 border-radius: 14px;
             }
 
             .module-button {
                 max-width: none;
+            }
+
+            .friends-grid {
+                grid-template-columns: 1fr;
             }
         }
     </style>
@@ -173,6 +276,15 @@
                 <div class="module-label">已评测</div>
                 <p class="module-desc">查看和搜索全部已收录菜品评分，并支持按列排序。</p>
             </a>
+        </section>
+
+        <section class="friends-section" aria-labelledby="friendsTitle">
+            <div class="friends-head">
+                <h2 id="friendsTitle" class="friends-title">友情链接</h2>
+                <p id="friendsHint" class="friends-hint">正在加载友链...</p>
+            </div>
+            <div id="friendsGrid" class="friends-grid" aria-live="polite"></div>
+            <p id="friendsEmpty" class="friends-empty hidden">暂无友情链接。</p>
         </section>
 
         <footer class="site-copyright">&copy; 2026 PopulusYang 版权所有 | <a href="LICENSE" target="_blank"
@@ -223,6 +335,94 @@
             });
         }
 
+        async function loadFriendsLinks() {
+            const hint = document.getElementById('friendsHint');
+            const grid = document.getElementById('friendsGrid');
+            const empty = document.getElementById('friendsEmpty');
+
+            try {
+                const response = await fetch(`links.json?v=${encodeURIComponent(APP_VERSION)}`, {
+                    cache: 'no-store'
+                });
+
+                if (!response.ok) {
+                    throw new Error(`无法加载友情链接 (${response.status} ${response.statusText})`);
+                }
+
+                const data = await response.json();
+                const links = Array.isArray(data) ? data : [];
+
+                grid.innerHTML = '';
+
+                if (!links.length) {
+                    hint.textContent = '已加载，但当前没有友情链接。';
+                    empty.classList.remove('hidden');
+                    return;
+                }
+
+                hint.textContent = '';
+                empty.classList.add('hidden');
+
+                const fragment = document.createDocumentFragment();
+                links.forEach(item => {
+                    const name = String(item?.name ?? '').trim();
+                    const link = String(item?.link ?? item?.url ?? '').trim();
+                    const iconPath = String(item?.icon_path ?? '').trim();
+
+                    if (!name || !link) {
+                        return;
+                    }
+
+                    const card = document.createElement('a');
+                    card.className = 'friend-card';
+                    card.href = link;
+                    card.target = '_blank';
+                    card.rel = 'noopener noreferrer';
+
+                    const content = document.createElement('div');
+                    content.className = 'friend-card-content';
+
+                    if (iconPath) {
+                        const icon = document.createElement('img');
+                        icon.className = 'friend-icon';
+                        icon.src = iconPath;
+                        icon.alt = `${name} 图标`;
+                        icon.loading = 'lazy';
+                        content.appendChild(icon);
+                    }
+
+                    const textWrap = document.createElement('div');
+                    textWrap.className = 'friend-text';
+
+                    const title = document.createElement('p');
+                    title.className = 'friend-name';
+                    title.textContent = name;
+
+                    const desc = document.createElement('p');
+                    desc.className = 'friend-desc';
+                    desc.textContent = '点击访问友情链接';
+
+                    textWrap.appendChild(title);
+                    textWrap.appendChild(desc);
+                    content.appendChild(textWrap);
+                    card.appendChild(content);
+                    fragment.appendChild(card);
+                });
+
+                if (!fragment.childNodes.length) {
+                    hint.textContent = '已加载，但友情链接内容不完整。';
+                    empty.classList.remove('hidden');
+                    return;
+                }
+
+                grid.appendChild(fragment);
+            } catch (err) {
+                console.error(err);
+                hint.textContent = '友情链接加载失败。';
+                empty.classList.remove('hidden');
+            }
+        }
+
         const APP_VERSION = ensureRuntimeVersion();
         if (APP_VERSION) {
             appendVersionToLinks(APP_VERSION);
@@ -233,6 +433,10 @@
                 window.location.reload();
             }
         });
+
+        if (APP_VERSION) {
+            loadFriendsLinks();
+        }
     </script>
 </body>
 
