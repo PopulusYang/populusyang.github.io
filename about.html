@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>关于猎人小屋</title>
+    <style>
+        @font-face {
+            font-family: "LXGW WenKai Local";
+            src: url("font/LXGWWenKai-Medium.ttf") format("truetype");
+            font-weight: 500;
+            font-style: normal;
+            font-display: swap;
+        }
+
+        :root {
+            --bg-1: #f3efe4;
+            --bg-2: #d9e3c5;
+            --card: #fffdf8;
+            --ink: #2b2a28;
+            --accent-a: #3f6f4b;
+            --accent-b: #c97732;
+            --shadow: rgba(43, 42, 40, 0.15);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: "Noto Serif SC", "STZhongsong", "Songti SC", "Microsoft YaHei", serif;
+            color: var(--ink);
+            background:
+                radial-gradient(circle at 18% 15%, rgba(255, 255, 255, 0.68), transparent 34%),
+                radial-gradient(circle at 82% 78%, rgba(201, 119, 50, 0.22), transparent 35%),
+                linear-gradient(140deg, var(--bg-1), var(--bg-2));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+
+        .panel {
+            width: min(900px, 100%);
+            background: var(--card);
+            border-radius: 20px;
+            box-shadow: 0 12px 40px var(--shadow);
+            border: 1px solid rgba(63, 111, 75, 0.18);
+            padding: 34px 28px;
+            animation: rise-in 560ms ease-out both;
+        }
+
+        .top-links {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-bottom: 16px;
+        }
+
+        .top-link {
+            text-decoration: none;
+            color: #fff;
+            background: #4f6e5a;
+            border-radius: 999px;
+            padding: 8px 14px;
+            font-size: 0.92rem;
+            transition: transform 180ms ease, opacity 180ms ease;
+        }
+
+        .top-link:hover {
+            transform: translateY(-2px);
+            opacity: 0.92;
+        }
+
+        h1 {
+            margin: 0;
+            text-align: center;
+            letter-spacing: 2px;
+            font-size: clamp(2rem, 5vw, 2.8rem);
+            color: #2f4f38;
+        }
+
+        .subtitle {
+            margin: 14px auto 26px;
+            text-align: center;
+            color: #4e4a42;
+            max-width: 620px;
+            line-height: 1.9;
+            font-size: clamp(1.12rem, 2.1vw, 1.34rem);
+            font-family: "LXGW WenKai Local", "LXGW WenKai", "LXGW WenKai GB", "Smiley Sans", "KaiTi", "STKaiti", "Songti SC", serif;
+            font-weight: 500;
+            letter-spacing: 0.08em;
+            text-shadow: 0 1px 0 rgba(255, 255, 255, 0.48);
+        }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 16px;
+        }
+
+        .card {
+            border-radius: 16px;
+            padding: 18px 18px 16px;
+            background: linear-gradient(155deg, rgba(255, 255, 255, 0.95), rgba(255, 248, 236, 0.95));
+            border: 1px solid rgba(63, 111, 75, 0.16);
+            box-shadow: 0 8px 20px rgba(32, 48, 37, 0.08);
+        }
+
+        .card h2 {
+            margin: 0 0 10px;
+            font-size: 1.1rem;
+            color: #2f4f38;
+        }
+
+        .card p,
+        .card li {
+            margin: 0;
+            color: #5f5b54;
+            line-height: 1.7;
+            font-size: 0.96rem;
+        }
+
+        .card ul {
+            margin: 0;
+            padding-left: 18px;
+        }
+
+        .license-list {
+            display: grid;
+            gap: 12px;
+        }
+
+        .license-item {
+            padding: 12px 12px 10px;
+            border-radius: 12px;
+            background: rgba(63, 111, 75, 0.05);
+            border: 1px solid rgba(63, 111, 75, 0.12);
+        }
+
+        .license-name {
+            margin: 0 0 6px;
+            color: #2f4f38;
+            font-weight: 700;
+        }
+
+        .license-meta {
+            margin: 0;
+            color: #625d55;
+            line-height: 1.65;
+            font-size: 0.94rem;
+        }
+
+        .license-meta a {
+            color: #4f6e5a;
+            text-decoration: none;
+            border-bottom: 1px dashed rgba(79, 110, 90, 0.45);
+        }
+
+        .license-meta a:hover {
+            color: #c97732;
+            border-bottom-color: rgba(201, 119, 50, 0.65);
+        }
+
+        .author-list {
+            display: grid;
+            gap: 12px;
+        }
+
+        .author-item {
+            display: grid;
+            grid-template-columns: minmax(110px, 140px) minmax(0, 1fr);
+            gap: 14px;
+            align-items: start;
+            padding: 12px;
+            border-radius: 12px;
+            background: rgba(63, 111, 75, 0.05);
+            border: 1px solid rgba(63, 111, 75, 0.12);
+        }
+
+        .author-photo {
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            object-fit: cover;
+            border-radius: 12px;
+            border: 1px solid rgba(63, 111, 75, 0.12);
+            background: rgba(255, 255, 255, 0.82);
+        }
+
+        .author-name {
+            margin: 0 0 6px;
+            color: #2f4f38;
+            font-weight: 700;
+        }
+
+        .author-text {
+            margin: 0;
+            color: #625d55;
+            line-height: 1.7;
+            font-size: 0.95rem;
+        }
+
+        .full-width {
+            grid-column: 1 / -1;
+        }
+
+        .link-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 6px;
+        }
+
+        .link-pill {
+            display: inline-block;
+            text-decoration: none;
+            color: #2f4f38;
+            background: rgba(63, 111, 75, 0.08);
+            border: 1px solid rgba(63, 111, 75, 0.16);
+            border-radius: 999px;
+            padding: 7px 12px;
+        }
+
+        .link-pill:hover {
+            border-color: rgba(201, 119, 50, 0.42);
+            color: #c97732;
+        }
+
+        .site-copyright {
+            margin: 24px 0 0;
+            text-align: center;
+            font-size: 0.88rem;
+            color: #7a7569;
+            letter-spacing: 0.5px;
+        }
+
+        .site-copyright a {
+            color: #4f6e5a;
+            text-decoration: none;
+            border-bottom: 1px dashed rgba(79, 110, 90, 0.5);
+        }
+
+        .site-copyright a:hover {
+            color: #c97732;
+            border-bottom-color: rgba(201, 119, 50, 0.65);
+        }
+
+        @keyframes rise-in {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 720px) {
+            .panel {
+                padding: 24px 16px;
+                border-radius: 14px;
+            }
+
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <main class="panel">
+        <div class="top-links">
+            <a class="top-link" href="index.html">返回首页</a>
+            <a class="top-link" href="dice.html">今天吃什么</a>
+            <a class="top-link" href="reviewed.html">已评测</a>
+        </div>
+
+        <h1>关于猎人小屋</h1>
+        <p class="subtitle">这是一个记录食堂菜品、评分与随机抽取结果的小站，目标是让“今天吃什么”这件事少一点纠结。</p>
+
+        <section class="content-grid" aria-label="关于页面内容">
+            <article class="card">
+                <h2>这个站点做什么</h2>
+                <p>猎人小屋主要提供三个入口：随机摇骰决定今天吃什么、查看已评测菜品、以及在首页浏览友情链接。</p>
+            </article>
+
+            <article class="card">
+                <h2>数据从哪里来</h2>
+                <p>菜品数据由本地生成的 SQLite 数据库 <strong>menu.db</strong> 提供，网页端通过 sql.js 读取后渲染到浏览器中。</p>
+            </article>
+
+            <article class="card">
+                <h2>静态托管方式</h2>
+                <p>本站使用 GitHub Pages 进行静态托管，不运行传统后端服务。页面、友链和数据库文件都作为静态资源发布，由浏览器直接读取和展示。</p>
+            </article>
+
+            <article class="card">
+                <h2>友情链接和图标</h2>
+                <p>首页底部的友情链接来自 <strong>links.json</strong>，可选图标字段为 <strong>icon_path</strong>。</p>
+            </article>
+
+            <article class="card">
+                <h2>维护方式</h2>
+                <p>本地通过 Python 脚本管理数据：<strong>manage_db.py</strong> 管菜品，<strong>manage_links.py</strong> 管友情链接。</p>
+            </article>
+
+            <article class="card">
+                <h2>GitHub 仓库维护</h2>
+                <p>本站的代码、页面、数据和图片都在 GitHub 仓库中统一维护，仓库地址为 <a
+                        href="https://github.com/PopulusYang/populusyang.github.io.git" target="_blank"
+                        rel="noopener noreferrer">github.com/PopulusYang/populusyang.github.io.git</a>。每次更新后通过提交并推送到主分支完成发布。
+                </p>
+            </article>
+
+            <article class="card full-width">
+                <h2>关于作者</h2>
+                <div class="author-list">
+                    <div class="author-item">
+                        <img class="author-photo" src="img/sculpture.jpg" alt="作者1照片">
+                        <div>
+                            <p class="author-name">作者1</p>
+                            <p class="author-text">一个学计算机的大三老登，正在准备考研。联系：20235902@stu.neu.edu.cn</p>
+                        </div>
+                    </div>
+                    <div class="author-item">
+                        <img class="author-photo" src="img/copilot.png" alt="作者2配图">
+                        <div>
+                            <p class="author-name">作者2</p>
+                            <p class="author-text">伟大的GitHub Copilot</p>
+                            <p class="author-text">(作者充不起Claude TAT)</p>
+                        </div>
+                    </div>
+                </div>
+            </article>
+
+            <article class="card full-width">
+                <h2>开源许可列表</h2>
+                <div class="license-list">
+                    <div class="license-item">
+                        <p class="license-name">sql.js</p>
+                        <p class="license-meta">用途：浏览器端读取 SQLite 数据库并完成查询展示。许可证：MIT。项目地址：<a
+                                href="https://github.com/sql-js/sql.js" target="_blank"
+                                rel="noopener noreferrer">github.com/sql-js/sql.js</a></p>
+                    </div>
+                    <div class="license-item">
+                        <p class="license-name">SQLite</p>
+                        <p class="license-meta">用途：`menu.db` 使用的数据库格式，以及本地菜品/友链数据管理流程所依赖的数据库引擎。许可证：Public Domain。项目地址：<a
+                                href="https://www.sqlite.org/" target="_blank" rel="noopener noreferrer">sqlite.org</a>
+                        </p>
+                    </div>
+                    <div class="license-item">
+                        <p class="license-name">LXGW WenKai</p>
+                        <p class="license-meta">用途：关于页中“这是一个记录食堂菜品...”这句文案的本地字体。许可证：SIL Open Font License 1.1。项目地址：<a
+                                href="https://github.com/lxgw/LxgwWenKai" target="_blank"
+                                rel="noopener noreferrer">github.com/lxgw/LxgwWenKai</a></p>
+                    </div>
+                </div>
+            </article>
+
+            <article class="card full-width">
+                <h2>快速入口</h2>
+                <div class="link-list">
+                    <a class="link-pill" href="index.html">返回猎人小屋</a>
+                    <a class="link-pill" href="dice.html">今天吃什么</a>
+                    <a class="link-pill" href="reviewed.html">已评测</a>
+                </div>
+            </article>
+        </section>
+
+        <footer class="site-copyright">&copy; 2026 PopulusYang 版权所有 | <a href="LICENSE" target="_blank"
+                rel="noopener noreferrer">MIT 协议</a></footer>
+    </main>
+</body>
+
+</html>
