@@ -15,6 +15,7 @@
         body {
             margin: 0;
             min-height: 100vh;
+            min-height: 100dvh;
             font-family: "Noto Serif SC", "STZhongsong", "Songti SC", "Microsoft YaHei", serif;
             color: var(--ink);
             background:
@@ -25,6 +26,7 @@
             align-items: center;
             justify-content: center;
             padding: 24px;
+            padding: 24px env(safe-area-inset-right, 24px) 24px env(safe-area-inset-left, 24px);
         }
 
         .panel {
@@ -70,9 +72,11 @@
             background: linear-gradient(155deg, rgba(255, 255, 255, 0.93), rgba(255, 248, 236, 0.95));
             border: 1px solid rgba(63, 111, 75, 0.2);
             border-radius: 16px;
-            padding: 22px 20px;
+            padding: 24px 22px;
             transition: transform 220ms ease, box-shadow 220ms ease, border-color 220ms ease;
             box-shadow: 0 8px 20px rgba(32, 48, 37, 0.08);
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
         }
 
         .module-button:hover {
@@ -140,11 +144,13 @@
             text-decoration: none;
             color: var(--ink);
             border-radius: 12px;
-            padding: 11px 12px;
+            padding: 14px 14px;
             background: rgba(255, 255, 255, 0.9);
             border: 1px solid rgba(63, 111, 75, 0.16);
             box-shadow: 0 5px 14px rgba(32, 48, 37, 0.05);
             transition: transform 220ms ease, box-shadow 220ms ease, border-color 220ms ease;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
         }
 
         .friend-card-content {
@@ -241,9 +247,25 @@
 
             .module-button {
                 max-width: none;
+                padding: 20px 16px;
+            }
+
+            .module-label {
+                font-size: 1.2rem;
+            }
+
+            .module-desc {
+                font-size: 0.9rem;
             }
 
             .friends-grid {
                 grid-template-columns: 1fr;
+            }
+        }
+
+        @media (pointer: coarse) {
+            .module-button:hover,
+            .friend-card:hover {
+                transform: none;
             }
         }

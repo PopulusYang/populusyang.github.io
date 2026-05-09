@@ -16,6 +16,7 @@ body {
     font-family: "Noto Serif SC", "STZhongsong", "Songti SC", "Microsoft YaHei", serif;
     margin: 0;
     min-height: 100vh;
+    min-height: 100dvh;
     background:
         radial-gradient(circle at 18% 15%, rgba(255, 255, 255, 0.68), transparent 34%),
         radial-gradient(circle at 82% 78%, rgba(201, 119, 50, 0.22), transparent 35%),
@@ -25,6 +26,7 @@ body {
     align-items: center;
     justify-content: center;
     padding: 24px;
+    padding: 24px env(safe-area-inset-right, 24px) 24px env(safe-area-inset-left, 24px);
 }
 
 .container {
@@ -61,6 +63,8 @@ h1 {
     background: #5e6b57;
     font-size: 0.9rem;
     transition: transform 180ms ease, opacity 180ms ease;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
 }
 
 .page-link:hover {
@@ -285,15 +289,49 @@ a.official-link:hover {
         font-size: 14px;
     }
 
-    /* 手机端仅保留：菜品名称(2)、评分(4)、详情(7) */
+    /* 手机端显示：菜品名称、食堂、评分 */
     #menuTable th:nth-child(1),
     #menuTable td:nth-child(1),
-    #menuTable th:nth-child(3),
-    #menuTable td:nth-child(3),
     #menuTable th:nth-child(5),
     #menuTable td:nth-child(5),
     #menuTable th:nth-child(6),
-    #menuTable td:nth-child(6) {
+    #menuTable td:nth-child(6),
+    #menuTable th:nth-child(7),
+    #menuTable td:nth-child(7) {
         display: none;
+    }
+
+    #menuTable th:nth-child(2),
+    #menuTable td:nth-child(2) {
+        width: auto;
+    }
+
+    .toolbar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .search-input {
+        min-width: 0;
+        font-size: 16px;
+    }
+
+    .search-button, .clear-button, .download-button {
+        padding: 10px 16px;
+        min-height: 40px;
+        font-size: 15px;
+        text-align: center;
+    }
+}
+
+@media (max-width: 480px) {
+    #menuTable th:nth-child(4),
+    #menuTable td:nth-child(4) {
+        text-align: right;
+    }
+
+    #menuTable td:nth-child(4) {
+        font-weight: 700;
+        color: #c97732;
     }
 }

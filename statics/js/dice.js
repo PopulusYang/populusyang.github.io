@@ -534,6 +534,11 @@ async function rollDish() {
     rolling = true;
     updateRollButtonState();
 
+    const idleHint = document.getElementById('diceIdleHint');
+    if (idleHint) {
+        idleHint.style.display = 'none';
+    }
+
     await runRollingAnimation();
     const dish = pickRandomDish();
     updateResult(dish);
@@ -541,6 +546,12 @@ async function rollDish() {
     if (dish) {
         rollCount += 1;
         appendRollHistory(dish);
+        const result = document.getElementById('result');
+        if (result && window.innerWidth < 768) {
+            setTimeout(() => {
+                result.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 200);
+        }
     }
 
     rolling = false;
