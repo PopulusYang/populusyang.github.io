@@ -4,7 +4,7 @@ import os
 import sys
 import csv
 
-DB_FILE = "menu.db"
+DB_FILE = os.path.join(os.path.dirname(__file__), "..", "data", "menu.db")
 
 
 def init_db():

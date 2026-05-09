@@ -1,58 +1,4 @@
-const VERSION_STORAGE_KEY = 'hunterHutRuntimeVersion';
-
-function buildVersionStamp() {
-    const now = new Date();
-    const pad = (n) => String(n).padStart(2, '0');
-    return `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
-}
-
-function getSessionVersion() {
-    try {
-        const stored = sessionStorage.getItem(VERSION_STORAGE_KEY);
-        if (stored) return stored;
-
-        const generated = buildVersionStamp();
-        sessionStorage.setItem(VERSION_STORAGE_KEY, generated);
-        return generated;
-    } catch (err) {
-        return buildVersionStamp();
-    }
-}
-
-function getRuntimeVersion() {
-    const url = new URL(window.location.href);
-    const sessionVersion = getSessionVersion();
-
-    if (url.searchParams.get('v') !== sessionVersion) {
-        url.searchParams.set('v', sessionVersion);
-        window.location.replace(url.toString());
-        return null;
-    }
-
-    return sessionVersion;
-}
-
-function appendVersionToLinks(version) {
-    const links = document.querySelectorAll('a[href$=".html"], a[href*=".html?"]');
-    links.forEach(link => {
-        const targetUrl = new URL(link.getAttribute('href'), window.location.href);
-        targetUrl.searchParams.set('v', version);
-        link.setAttribute('href', `${targetUrl.pathname}${targetUrl.search}${targetUrl.hash}`);
-    });
-}
-
-const APP_VERSION = getRuntimeVersion();
-if (APP_VERSION) {
-    appendVersionToLinks(APP_VERSION);
-}
-
-window.addEventListener('pageshow', (event) => {
-    if (event.persisted) {
-        window.location.reload();
-    }
-});
-
-const dbFile = "menu.db";
+const dbFile = "data/menu.db";
 let allRows = [];
 let allColumns = [];
 let currentQuery = "";
@@ -61,76 +7,17 @@ let databaseLastUpdated = '';
 
 const numericSortKeys = new Set(['id', 'rating', 'is_active']);
 
-function parseDatabaseTimestamp(value) {
-    const text = String(value ?? '').trim();
-    if (!text) {
-        return null;
-    }
-
-    const utcLike = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(text)
-        ? `${text.replace(' ', 'T')}Z`
-        : text;
-    const date = new Date(utcLike);
-    return Number.isNaN(date.getTime()) ? null : date;
-}
-
-function formatDatabaseTimestampForBeijing(value) {
-    const date = parseDatabaseTimestamp(value);
-    if (!date) {
-        return '';
-    }
-
-    try {
-        return new Intl.DateTimeFormat('zh-CN', {
-            timeZone: 'Asia/Shanghai',
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit',
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit',
-            hour12: false
-        }).format(date).replace(/\//g, '-');
-    } catch (err) {
-        return date.toLocaleString('zh-CN');
-    }
-}
-
-function getDatabaseLastUpdated(db) {
-    try {
-        const tableInfo = db.exec('PRAGMA table_info(dishes)');
-        if (!tableInfo.length || !tableInfo[0].values.some(row => String(row[1]) === 'updated_at')) {
-            return '';
-        }
-
-        const result = db.exec('SELECT MAX(updated_at) AS last_updated FROM dishes');
-        if (!result.length || !result[0].values.length) {
-            return '';
-        }
-
-        return formatDatabaseTimestampForBeijing(result[0].values[0][0]);
-    } catch (err) {
-        return '';
-    }
-}
-
 function updateDatabaseMeta() {
     const meta = document.getElementById('dbMeta');
-    if (!meta) {
-        return;
-    }
-
+    if (!meta) return;
     meta.textContent = databaseLastUpdated
         ? `数据库最后更新时间：${databaseLastUpdated}`
         : '数据库最后更新时间：暂不可用';
 }
 
 async function loadDatabase() {
-    if (!APP_VERSION) {
-        return;
-    }
+    if (!APP_VERSION) return;
 
-    // 配置 sql.js 加载路径
     const config = {
         locateFile: filename => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/${filename}`
     };
@@ -150,19 +37,15 @@ async function loadDatabase() {
         databaseLastUpdated = getDatabaseLastUpdated(db);
         updateDatabaseMeta();
 
-        // 查询数据
         let result;
         try {
-            // 尝试查询所有列，包括新列
             result = db.exec("SELECT * FROM dishes");
         } catch (queryErr) {
             console.warn("查询全部字段失败，尝试仅查询基础字段", queryErr);
-            // 兼容旧版数据库，只查存在的基础列
             result = db.exec("SELECT id, name, canteen, rating FROM dishes");
         }
 
         if (result.length > 0) {
-            // result[0] 包含 columns 和 values
             allColumns = result[0].columns;
             allRows = result[0].values;
             refreshTable();
@@ -306,7 +189,6 @@ function renderTable(data) {
     const cols = data.columns;
     const rows = data.values;
 
-    // 辅助函数：根据列名获取值，如果列不存在返回 null
     const getVal = (row, colName) => {
         const idx = cols.indexOf(colName);
         return idx !== -1 ? row[idx] : null;
@@ -318,32 +200,25 @@ function renderTable(data) {
         const canteen = getVal(row, 'canteen');
         const rating = getVal(row, 'rating');
 
-        // 获取新字段值 (带默认处理)
-        // 如果是旧数据行，SQLite ALTER TABLE 会自动填充默认值，但如果是 JS 兼容模式查询则需这里处理
         let mealType = getVal(row, 'meal_type') || "午餐,晚餐";
         let officialLink = getVal(row, 'official_link') || "";
         let isActive = getVal(row, 'is_active');
-        // is_active 可能是 0, 1, 或 null (如果用旧query查)
         if (isActive === null) isActive = 1;
 
         const tr = document.createElement('tr');
 
-        // 如果停业，整行变灰
         if (!isActive) {
             tr.classList.add('status-closed-row');
         }
 
-        // 格式化供应时段
         const mealsHtml = mealType.split(/[，,、/;；]/g)
             .map(m => `<span class="meal-tag">${m.trim()}</span>`)
             .join('');
 
-        // 格式化状态徽章
         const statusHtml = isActive
             ? `<span class="status-badge badge-active">营业</span>`
             : `<span class="status-badge badge-closed">停业</span>`;
 
-        // 格式化链接
         let linkHtml = '<span style="color:#ccc">-</span>';
         if (officialLink) {
             const url = officialLink.startsWith('http') ? officialLink : `http://${officialLink}`;
@@ -371,15 +246,9 @@ function renderTable(data) {
 }
 
 function escapeCsvCell(value) {
-    if (value === null || value === undefined) {
-        return '';
-    }
-
+    if (value === null || value === undefined) return '';
     const text = String(value);
-    if (/[",\r\n]/.test(text)) {
-        return `"${text.replace(/"/g, '""')}"`;
-    }
-
+    if (/[",\r\n]/.test(text)) return `"${text.replace(/"/g, '""')}"`;
     return text;
 }
 
@@ -404,7 +273,7 @@ function downloadDatabaseCsv() {
 
     try {
         const csv = toCsv(allColumns, allRows);
-        const blob = new Blob(['\uFEFF', csv], { type: 'text/csv;charset=utf-8;' });
+        const blob = new Blob(['﻿', csv], { type: 'text/csv;charset=utf-8;' });
         const url = URL.createObjectURL(blob);
 
         const link = document.createElement('a');

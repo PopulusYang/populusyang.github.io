@@ -4,7 +4,7 @@ import os
 import sys
 from copy import deepcopy
 
-LINKS_FILE = "links.json"
+LINKS_FILE = os.path.join(os.path.dirname(__file__), "..", "data", "links.json")
 
 
 def load_links(file_path=LINKS_FILE):
