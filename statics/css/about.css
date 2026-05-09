@@ -7,13 +7,13 @@
 }
 
 :root {
-    --bg-1: #f3efe4;
-    --bg-2: #d9e3c5;
-    --card: #fffdf8;
-    --ink: #2b2a28;
-    --accent-a: #3f6f4b;
-    --accent-b: #c97732;
-    --shadow: rgba(43, 42, 40, 0.15);
+    --bg-1: #e8dccc;
+    --bg-2: #c4b8a0;
+    --card: #f8f0e0;
+    --ink: #2b2218;
+    --accent-a: #5a3e2b;
+    --accent-b: #d4893a;
+    --shadow: rgba(40, 30, 15, 0.18);
 }
 
 * {
@@ -32,8 +32,8 @@ body {
     font-family: "Noto Serif SC", "STZhongsong", "Songti SC", "Microsoft YaHei", serif;
     color: var(--ink);
     background:
-        radial-gradient(circle at 18% 15%, rgba(255, 255, 255, 0.68), transparent 34%),
-        radial-gradient(circle at 82% 78%, rgba(201, 119, 50, 0.22), transparent 35%),
+        radial-gradient(circle at 50% 60%, rgba(212, 137, 58, 0.18), transparent 55%),
+        radial-gradient(circle at 18% 15%, rgba(255, 255, 255, 0.6), transparent 34%),
         linear-gradient(140deg, var(--bg-1), var(--bg-2));
     display: flex;
     align-items: center;
@@ -46,13 +46,18 @@ body {
 .panel {
     width: min(900px, calc(100vw - 48px));
     max-width: 100%;
-    background: var(--card);
+    background:
+        linear-gradient(180deg, rgba(255,252,245,0.95), rgba(248,240,224,0.98)),
+        repeating-linear-gradient(90deg,
+            transparent, transparent 120px,
+            rgba(139,111,76,0.04) 120px, rgba(139,111,76,0.04) 121px);
     border-radius: 20px;
     box-shadow: 0 12px 40px var(--shadow);
-    border: 1px solid rgba(63, 111, 75, 0.18);
+    border: 1px solid rgba(139, 111, 76, 0.2);
     padding: 34px 28px;
     animation: rise-in 560ms ease-out both;
     overflow: hidden;
+    position: relative;
 }
 
 .top-links {
@@ -66,7 +71,7 @@ body {
 .top-link {
     text-decoration: none;
     color: #fff;
-    background: #4f6e5a;
+    background: #6a5a48;
     border-radius: 999px;
     padding: 8px 14px;
     font-size: 0.92rem;
@@ -85,13 +90,14 @@ h1 {
     text-align: center;
     letter-spacing: 2px;
     font-size: clamp(2rem, 5vw, 2.8rem);
-    color: #2f4f38;
+    color: #3d2b15;
+    text-shadow: 0 1px 0 rgba(255,255,240,0.5);
 }
 
 .subtitle {
     margin: 14px auto 26px;
     text-align: center;
-    color: #4e4a42;
+    color: #6a5a48;
     max-width: 620px;
     line-height: 1.9;
     font-size: clamp(1.12rem, 2.1vw, 1.34rem);
@@ -119,13 +125,13 @@ h1 {
 .card h2 {
     margin: 0 0 8px;
     font-size: 1.06rem;
-    color: #2f4f38;
+    color: #4a3520;
 }
 
 .card p,
 .card li {
     margin: 0;
-    color: #5f5b54;
+    color: #6a5a48;
     line-height: 1.7;
     font-size: 0.96rem;
     overflow-wrap: anywhere;
@@ -151,13 +157,13 @@ h1 {
 
 .license-name {
     margin: 0 0 6px;
-    color: #2f4f38;
+    color: #4a3520;
     font-weight: 700;
 }
 
 .license-meta {
     margin: 0;
-    color: #625d55;
+    color: #6a5a48;
     line-height: 1.65;
     font-size: 0.94rem;
     overflow-wrap: anywhere;
@@ -165,14 +171,14 @@ h1 {
 }
 
 .license-meta a {
-    color: #4f6e5a;
+    color: #6a5a48;
     text-decoration: none;
-    border-bottom: 1px dashed rgba(79, 110, 90, 0.45);
+    border-bottom: 1px dashed rgba(106, 90, 72, 0.4);
 }
 
 .license-meta a:hover {
-    color: #c97732;
-    border-bottom-color: rgba(201, 119, 50, 0.65);
+    color: var(--accent-b);
+    border-bottom-color: rgba(212, 137, 58, 0.6);
 }
 
 .license-meta a {
@@ -207,13 +213,13 @@ h1 {
 
 .author-name {
     margin: 0 0 6px;
-    color: #2f4f38;
+    color: #4a3520;
     font-weight: 700;
 }
 
 .author-text {
     margin: 0;
-    color: #625d55;
+    color: #6a5a48;
     line-height: 1.7;
     font-size: 0.95rem;
     overflow-wrap: anywhere;
@@ -234,9 +240,9 @@ h1 {
 .link-pill {
     display: inline-block;
     text-decoration: none;
-    color: #2f4f38;
-    background: rgba(63, 111, 75, 0.08);
-    border: 1px solid rgba(63, 111, 75, 0.16);
+    color: #4a3520;
+    background: rgba(74, 53, 32, 0.06);
+    border: 1px solid rgba(139, 111, 76, 0.18);
     border-radius: 999px;
     padding: 7px 12px;
     -webkit-tap-highlight-color: transparent;
@@ -244,8 +250,8 @@ h1 {
 }
 
 .link-pill:hover {
-    border-color: rgba(201, 119, 50, 0.42);
-    color: #c97732;
+    border-color: rgba(212, 137, 58, 0.4);
+    color: var(--accent-b);
 }
 
 .link-list,
@@ -257,19 +263,19 @@ h1 {
     margin: 24px 0 0;
     text-align: center;
     font-size: 0.88rem;
-    color: #7a7569;
+    color: #8a7a6a;
     letter-spacing: 0.5px;
 }
 
 .site-copyright a {
-    color: #4f6e5a;
+    color: #6a5a48;
     text-decoration: none;
-    border-bottom: 1px dashed rgba(79, 110, 90, 0.5);
+    border-bottom: 1px dashed rgba(106, 90, 72, 0.4);
 }
 
 .site-copyright a:hover {
-    color: #c97732;
-    border-bottom-color: rgba(201, 119, 50, 0.65);
+    color: var(--accent-b);
+    border-bottom-color: rgba(212, 137, 58, 0.6);
 }
 
 @keyframes rise-in {

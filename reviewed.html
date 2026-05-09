@@ -11,9 +11,37 @@
     <link rel="stylesheet" href="statics/css/reviewed.css">
     <!-- 引入 sql.js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/sql-wasm.js"></script>
+    <style>
+        .ambient-glow {
+            position: fixed;
+            pointer-events: none;
+            z-index: 0;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(212,137,58,0.10), transparent 70%);
+            animation: warm-pulse 5s ease-in-out infinite;
+        }
+        .ambient-glow--1 {
+            top: -8%; right: -8%;
+            width: 40vw; height: 40vw;
+            max-width: 400px; max-height: 400px;
+            animation-delay: 0s;
+        }
+        .ambient-glow--2 {
+            bottom: -12%; left: -8%;
+            width: 50vw; height: 50vw;
+            max-width: 450px; max-height: 450px;
+            animation-delay: 2.5s;
+        }
+        @keyframes warm-pulse {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
+        }
+    </style>
 </head>
 
 <body>
+    <div class="ambient-glow ambient-glow--1" aria-hidden="true"></div>
+    <div class="ambient-glow ambient-glow--2" aria-hidden="true"></div>
 
     <div class="container">
         <div class="page-nav">
