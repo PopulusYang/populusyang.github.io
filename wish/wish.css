@@ -320,6 +320,23 @@ h1 {
     color: #b8a890;
 }
 
+.filter-bar select {
+    padding: 8px 12px;
+    border: 1px solid rgba(139, 111, 76, 0.25);
+    border-radius: 8px;
+    background: rgba(255, 252, 245, 0.8);
+    font-size: 0.9rem;
+    font-family: inherit;
+    color: var(--ink);
+    outline: none;
+    cursor: pointer;
+}
+
+.filter-bar select:focus {
+    border-color: var(--accent-b);
+    box-shadow: 0 0 0 2px rgba(212, 137, 58, 0.1);
+}
+
 .filter-hint {
     font-size: 0.84rem;
     color: #8a7a6a;

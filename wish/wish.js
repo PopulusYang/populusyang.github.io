@@ -28,6 +28,7 @@ const $wishGrid = document.getElementById('wishGrid');
 const $emptyState = document.getElementById('emptyState');
 const $loading = document.getElementById('loading');
 const $filterInput = document.getElementById('filterSubmitter');
+const $filterStatus = document.getElementById('filterStatus');
 const $form = document.getElementById('wishForm');
 const $formFeedback = document.getElementById('formFeedback');
 const $adminToggle = document.getElementById('adminToggle');
@@ -110,16 +111,19 @@ function renderWishes() {
     $wishGrid.innerHTML = '';
     $loading.style.display = 'none';
 
-    document.getElementById('wishCount').textContent = wishes.length;
+    const statusFilter = $filterStatus.value;
+    const filtered = statusFilter ? wishes.filter(w => w.status === statusFilter) : wishes;
 
-    if (wishes.length === 0) {
+    document.getElementById('wishCount').textContent = filtered.length;
+
+    if (filtered.length === 0) {
         $emptyState.style.display = 'block';
         return;
     }
 
     $emptyState.style.display = 'none';
 
-    wishes.forEach(w => {
+    filtered.forEach(w => {
         const card = document.createElement('div');
         card.className = 'wish-card';
         card.innerHTML = buildWishCardHTML(w);
@@ -270,6 +274,10 @@ $form.addEventListener('submit', async (e) => {
 
 $filterInput.addEventListener('input', () => {
     loadWishes();
+});
+
+$filterStatus.addEventListener('change', () => {
+    renderWishes();
 });
 
 /* ---- Admin Login/Logout ---- */

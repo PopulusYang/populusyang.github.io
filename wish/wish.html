@@ -32,6 +32,13 @@
         <div id="panelPool" class="tab-panel active">
             <div class="filter-bar">
                 <input id="filterSubmitter" type="text" placeholder="按昵称筛选...">
+                <select id="filterStatus">
+                    <option value="">全部状态</option>
+                    <option value="待评测">待评测</option>
+                    <option value="正在评测">正在评测</option>
+                    <option value="已评测">已评测</option>
+                    <option value="已有重复">已有重复</option>
+                </select>
                 <span class="filter-hint">共 <span id="wishCount">0</span> 条许愿</span>
             </div>
             <div id="emptyState" class="empty-state" style="display:none;">
