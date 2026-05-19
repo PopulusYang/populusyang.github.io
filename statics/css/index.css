@@ -269,6 +269,10 @@
             border-left: 4px solid var(--accent-b);
         }
 
+        .wish {
+            border-left: 4px solid #5a9e6f;
+        }
+
         @keyframes rise-in {
             from {
                 opacity: 0;
@@ -339,6 +343,7 @@
         .module-button:nth-child(1) { animation-delay: 120ms; }
         .module-button:nth-child(2) { animation-delay: 200ms; }
         .module-button:nth-child(3) { animation-delay: 280ms; }
+        .module-button:nth-child(4) { animation-delay: 360ms; }
 
         @media (max-width: 640px) {
             .panel {

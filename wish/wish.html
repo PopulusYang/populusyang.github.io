@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>许愿池 - 猎人小屋</title>
+    <link rel="stylesheet" href="wish.css">
+</head>
+
+<body>
+    <div class="ambient-glow ambient-glow--1" aria-hidden="true"></div>
+    <div class="ambient-glow ambient-glow--2" aria-hidden="true"></div>
+
+    <main class="panel">
+        <nav class="top-nav">
+            <a class="nav-link nav-link--home" href="../index.html">← 返回猎人小屋</a>
+        </nav>
+
+        <h1>许愿池</h1>
+        <p class="subtitle">留下你想吃但还没被评测的菜品，说不定下次就安排上了</p>
+
+        <div class="tab-bar">
+            <button id="tabPool" class="tab-btn active">许愿池</button>
+            <button id="tabSubmit" class="tab-btn">我要许愿</button>
+        </div>
+
+        <!-- 许愿池列表 -->
+        <div id="panelPool" class="tab-panel active">
+            <div class="filter-bar">
+                <input id="filterSubmitter" type="text" placeholder="按昵称筛选...">
+                <span class="filter-hint">共 <span id="wishCount">0</span> 条许愿</span>
+            </div>
+            <div id="emptyState" class="empty-state" style="display:none;">
+                还没有人许愿，来做第一个吧！
+            </div>
+            <div id="loading" class="loading">加载中...</div>
+            <div id="wishGrid" class="wish-grid"></div>
+        </div>
+
+        <!-- 提交许愿 -->
+        <div id="panelSubmit" class="tab-panel">
+            <form id="wishForm" class="wish-form" autocomplete="off">
+                <div class="form-group">
+                    <label for="dishName">菜品名 <span style="color:#c0503c;">*</span></label>
+                    <input id="dishName" type="text" placeholder="例如：锅包肉" required maxlength="50">
+                </div>
+                <div class="form-group">
+                    <label for="canteen">食堂 <span style="color:#c0503c;">*</span></label>
+                    <input id="canteen" type="text" placeholder="例如：一食堂" required maxlength="50">
+                </div>
+                <div class="form-group">
+                    <label for="location">具体位置 <span class="optional">（选填）</span></label>
+                    <input id="location" type="text" placeholder="例如：二楼西侧窗口" maxlength="100">
+                </div>
+                <div class="form-group">
+                    <label for="price">价格 <span class="optional">（选填）</span></label>
+                    <input id="price" type="text" placeholder="例如：15元" maxlength="20">
+                </div>
+                <div class="form-group">
+                    <label for="submitter">你的昵称 <span style="color:#c0503c;">*</span></label>
+                    <input id="submitter" type="text" placeholder="给自己起个名字吧" required maxlength="30">
+                </div>
+                <button class="btn-submit" type="submit">提交许愿</button>
+                <div id="formFeedback" class="form-feedback"></div>
+            </form>
+        </div>
+
+        <!-- 管理员 -->
+        <div class="admin-section">
+            <button id="adminToggle" class="admin-toggle">管理员入口</button>
+            <div id="adminLogin" class="admin-login">
+                <input id="adminPasswordInput" type="password" placeholder="管理密码">
+                <button id="adminLoginBtn">验证</button>
+            </div>
+            <div id="adminIndicator" class="admin-indicator">
+                已通过管理员验证
+                <button id="adminLogoutBtn" class="btn-delete" style="margin-left:8px;">退出</button>
+            </div>
+        </div>
+
+        <footer class="site-copyright">&copy; 2026 PopulusYang 版权所有 | <a href="../LICENSE" target="_blank"
+                rel="noopener noreferrer">MIT 协议</a></footer>
+    </main>
+
+    <script src="wish.js"></script>
+</body>
+
+</html>

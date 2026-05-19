@@ -1,0 +1,14 @@
+services:
+  wish-backend:
+    build: .
+    container_name: wish-backend
+    ports:
+      - "5000:5000"
+    environment:
+      - ADMIN_PASSWORD=admin123
+    volumes:
+      - wish-data:/data
+    restart: unless-stopped
+
+volumes:
+  wish-data:
