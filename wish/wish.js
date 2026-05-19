@@ -5,6 +5,7 @@ const STATUS_LABELS = {
     '正在评测': '正在评测',
     '已评测': '已评测',
     '已有重复': '已有重复',
+    '何意味': '何意味',
 };
 
 const STATUS_CSS = {
@@ -12,7 +13,18 @@ const STATUS_CSS = {
     '正在评测': 'status-badge--reviewing',
     '已评测': 'status-badge--done',
     '已有重复': 'status-badge--duplicate',
+    '何意味': 'status-badge--special',
 };
+
+function isSpecialLink(link) {
+    if (!link) return false;
+    return /statics\/special\/.*\.html$/i.test(link);
+}
+
+function getDisplayStatus(w) {
+    if (isSpecialLink(w.official_link)) return '何意味';
+    return w.status;
+}
 
 let wishes = [];
 let currentTab = 'pool';
@@ -112,7 +124,14 @@ function renderWishes() {
     $loading.style.display = 'none';
 
     const statusFilter = $filterStatus.value;
-    const filtered = statusFilter ? wishes.filter(w => w.status === statusFilter) : wishes;
+    let filtered;
+    if (statusFilter === '何意味') {
+        filtered = wishes.filter(w => isSpecialLink(w.official_link));
+    } else if (statusFilter) {
+        filtered = wishes.filter(w => w.status === statusFilter);
+    } else {
+        filtered = wishes;
+    }
 
     document.getElementById('wishCount').textContent = filtered.length;
 
@@ -159,7 +178,7 @@ function buildWishCardHTML(w) {
             <div class="wish-time">${time}</div>
         </div>
         <div class="wish-status-cell">
-            <span class="status-badge ${STATUS_CSS[w.status] || 'status-badge--pending'}">${w.status}</span>
+            <span class="status-badge ${STATUS_CSS[getDisplayStatus(w)] || 'status-badge--pending'}">${getDisplayStatus(w)}</span>
             ${adminPassword ? '<div class="admin-actions"></div>' : ''}
         </div>`;
 }
@@ -168,7 +187,7 @@ function wireAdminControls(card, w) {
     const actionsEl = card.querySelector('.admin-actions');
     if (!actionsEl) return;
 
-    const statuses = ['待评测', '正在评测', '已评测', '已有重复'];
+    const statuses = ['待评测', '正在评测', '已评测', '已有重复', '何意味'];
     const btnRow = document.createElement('div');
     btnRow.className = 'admin-status-row';
 

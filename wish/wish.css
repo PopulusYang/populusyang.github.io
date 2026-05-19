@@ -465,6 +465,11 @@ h1 {
     color: #6a6a6a;
 }
 
+.status-badge--special {
+    background: rgba(180, 60, 120, 0.14);
+    color: #9b3b6b;
+}
+
 /* ---- Admin Controls on Cards ---- */
 
 .admin-actions {
