@@ -286,16 +286,31 @@ $adminToggle.addEventListener('click', () => {
     $adminLogin.classList.toggle('open');
 });
 
-$adminLoginBtn.addEventListener('click', () => {
-    adminPassword = $adminPasswordInput.value.trim();
-    if (!adminPassword) {
+$adminLoginBtn.addEventListener('click', async () => {
+    const pwd = $adminPasswordInput.value.trim();
+    if (!pwd) {
         alert('请输入管理密码');
         return;
     }
-    $adminIndicator.classList.add('visible');
-    $adminLogin.classList.remove('open');
-    $adminPasswordInput.value = '';
-    renderWishes();
+    try {
+        const res = await fetch(API_BASE + '/api/auth', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ password: pwd }),
+        });
+        const data = await res.json();
+        if (data.success) {
+            adminPassword = pwd;
+            $adminIndicator.classList.add('visible');
+            $adminLogin.classList.remove('open');
+            $adminPasswordInput.value = '';
+            renderWishes();
+        } else {
+            alert(data.message || '密码错误');
+        }
+    } catch {
+        alert('无法连接服务器，请稍后再试。');
+    }
 });
 
 $adminLogoutBtn.addEventListener('click', () => {

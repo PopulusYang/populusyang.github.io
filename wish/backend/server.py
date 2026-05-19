@@ -88,6 +88,14 @@ def create_wish():
     return jsonify({"success": True, "id": wish_id, "message": "许愿成功！等待管理员审核"}), 201
 
 
+@app.route("/api/auth", methods=["POST"])
+def verify_password():
+    data = request.get_json(silent=True)
+    if check_admin(data):
+        return jsonify({"success": True, "message": "验证通过"})
+    return jsonify({"success": False, "message": "密码错误"}), 403
+
+
 @app.route("/api/wishes", methods=["GET"])
 def list_wishes():
     submitter = request.args.get("submitter", "").strip()
