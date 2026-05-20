@@ -342,6 +342,118 @@ h1 {
     color: #8a7a6a;
 }
 
+/* ---- View Mode Toggle ---- */
+
+.view-mode-toggle {
+    padding: 8px 14px;
+    border: 1px solid rgba(139, 111, 76, 0.25);
+    border-radius: 8px;
+    background: rgba(255, 252, 245, 0.8);
+    font-size: 0.9rem;
+    font-family: inherit;
+    color: #6a5a48;
+    cursor: pointer;
+    transition: background 200ms ease, color 200ms ease, border-color 200ms ease, transform 180ms ease;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+}
+
+.view-mode-toggle:hover {
+    border-color: var(--accent-b);
+    color: var(--accent-b);
+    transform: translateY(-1px);
+}
+
+.view-mode-toggle--active {
+    background: var(--accent-a);
+    color: #fff;
+    border-color: var(--accent-a);
+}
+
+.view-mode-toggle--active:hover {
+    background: #4a2e1b;
+    color: #fff;
+    border-color: #4a2e1b;
+}
+
+/* ---- Wish Table ---- */
+
+.wish-table-wrap {
+    width: 100%;
+    overflow-x: auto;
+    border-radius: 12px;
+    border: 1px solid rgba(139, 111, 76, 0.18);
+    background: linear-gradient(160deg, rgba(255, 252, 245, 0.94), rgba(245, 235, 215, 0.96));
+    box-shadow: 0 6px 16px rgba(40, 30, 15, 0.06);
+}
+
+.wish-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.92rem;
+    color: var(--ink);
+}
+
+.wish-table thead {
+    background: rgba(139, 111, 76, 0.08);
+}
+
+.wish-table th {
+    padding: 12px 14px;
+    text-align: left;
+    font-weight: 700;
+    color: #4a3520;
+    font-size: 0.88rem;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid rgba(139, 111, 76, 0.18);
+    white-space: nowrap;
+}
+
+.wish-table td {
+    padding: 11px 14px;
+    border-bottom: 1px solid rgba(139, 111, 76, 0.1);
+    vertical-align: middle;
+}
+
+.wish-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.wish-table tbody tr {
+    transition: background 180ms ease;
+}
+
+.wish-table tbody tr:hover {
+    background: rgba(212, 137, 58, 0.06);
+}
+
+.wish-table-name {
+    font-weight: 700;
+    color: #4a3520;
+}
+
+.wish-table-time {
+    font-size: 0.84rem;
+    color: #8a7a6a;
+    white-space: nowrap;
+}
+
+.wish-table-empty {
+    color: #b8a890;
+}
+
+.wish-table-link {
+    color: #5a7fac;
+    text-decoration: none;
+    border-bottom: 1px dashed rgba(90, 127, 172, 0.4);
+    font-size: 0.88rem;
+}
+
+.wish-table-link:hover {
+    color: #3d5f8a;
+    border-bottom-color: rgba(90, 127, 172, 0.7);
+}
+
 /* ---- Wish Cards ---- */
 
 .wish-grid {
@@ -720,6 +832,52 @@ h1 {
 
     .filter-bar input {
         width: 140px;
+    }
+
+    /* ---- 窄屏表格：仅显示 菜品/食堂/状态/链接 四列 ---- */
+    .wish-table {
+        font-size: 0.86rem;
+        table-layout: fixed;
+    }
+
+    .wish-table th,
+    .wish-table td {
+        padding: 9px 8px;
+        word-break: break-word;
+        white-space: normal;
+    }
+
+    /* 隐藏 位置(3)、价格(4)、许愿人(5)、时间(7) */
+    .wish-table th:nth-child(3),
+    .wish-table td:nth-child(3),
+    .wish-table th:nth-child(4),
+    .wish-table td:nth-child(4),
+    .wish-table th:nth-child(5),
+    .wish-table td:nth-child(5),
+    .wish-table th:nth-child(7),
+    .wish-table td:nth-child(7) {
+        display: none;
+    }
+
+    /* 余下 4 列的宽度分配：菜品/食堂稍宽，状态/链接较窄 */
+    .wish-table th:nth-child(1),
+    .wish-table td:nth-child(1) {
+        width: 32%;
+    }
+
+    .wish-table th:nth-child(2),
+    .wish-table td:nth-child(2) {
+        width: 28%;
+    }
+
+    .wish-table th:nth-child(6),
+    .wish-table td:nth-child(6) {
+        width: 22%;
+    }
+
+    .wish-table th:nth-child(8),
+    .wish-table td:nth-child(8) {
+        width: 18%;
     }
 
     .admin-actions {

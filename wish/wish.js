@@ -28,6 +28,8 @@ function getDisplayStatus(w) {
 
 let wishes = [];
 let currentTab = 'pool';
+let currentView = 'card';
+let showSpecial = false;
 let adminPassword = null;
 
 /* ---- DOM Ref cache ---- */
@@ -49,6 +51,10 @@ const $adminPasswordInput = document.getElementById('adminPasswordInput');
 const $adminLoginBtn = document.getElementById('adminLoginBtn');
 const $adminIndicator = document.getElementById('adminIndicator');
 const $adminLogoutBtn = document.getElementById('adminLogoutBtn');
+const $viewModeToggle = document.getElementById('viewModeToggle');
+const $showSpecialToggle = document.getElementById('showSpecialToggle');
+const $wishTableWrap = document.getElementById('wishTableWrap');
+const $wishTableBody = document.getElementById('wishTableBody');
 
 /* ---- Tab Switching ---- */
 
@@ -102,6 +108,8 @@ async function apiGet(path) {
 async function loadWishes() {
     $loading.style.display = 'block';
     $wishGrid.innerHTML = '';
+    $wishTableBody.innerHTML = '';
+    $wishTableWrap.style.display = 'none';
     $emptyState.style.display = 'none';
 
     try {
@@ -121,6 +129,7 @@ async function loadWishes() {
 
 function renderWishes() {
     $wishGrid.innerHTML = '';
+    $wishTableBody.innerHTML = '';
     $loading.style.display = 'none';
 
     const statusFilter = $filterStatus.value;
@@ -133,7 +142,16 @@ function renderWishes() {
         filtered = wishes;
     }
 
+    // 默认屏蔽"何意味"恶搞许愿；按钮开启或用户主动筛选"何意味"时除外
+    if (!showSpecial && statusFilter !== '何意味') {
+        filtered = filtered.filter(w => !isSpecialLink(w.official_link));
+    }
+
     document.getElementById('wishCount').textContent = filtered.length;
+
+    const showAsTable = currentView === 'table';
+    $wishGrid.style.display = showAsTable ? 'none' : '';
+    $wishTableWrap.style.display = showAsTable ? '' : 'none';
 
     if (filtered.length === 0) {
         $emptyState.style.display = 'block';
@@ -141,6 +159,11 @@ function renderWishes() {
     }
 
     $emptyState.style.display = 'none';
+
+    if (showAsTable) {
+        renderWishTable(filtered);
+        return;
+    }
 
     filtered.forEach(w => {
         const card = document.createElement('div');
@@ -153,6 +176,53 @@ function renderWishes() {
         }
     });
 }
+
+function renderWishTable(list) {
+    const frag = document.createDocumentFragment();
+    list.forEach(w => {
+        const status = getDisplayStatus(w);
+        const tr = document.createElement('tr');
+        const linkCell = w.official_link
+            ? `<a class="wish-table-link" href="${esc(w.official_link)}" target="_blank" rel="noopener noreferrer">查看</a>`
+            : '<span class="wish-table-empty">—</span>';
+        tr.innerHTML = `
+            <td data-label="菜品" class="wish-table-name">${esc(w.name)}</td>
+            <td data-label="食堂">${esc(w.canteen)}</td>
+            <td data-label="位置">${w.location ? esc(w.location) : '<span class="wish-table-empty">—</span>'}</td>
+            <td data-label="价格">${w.price ? esc(w.price) : '<span class="wish-table-empty">—</span>'}</td>
+            <td data-label="许愿人">${esc(w.submitter)}</td>
+            <td data-label="状态"><span class="status-badge ${STATUS_CSS[status] || 'status-badge--pending'}">${status}</span></td>
+            <td data-label="时间" class="wish-table-time">${formatTime(w.created_at)}</td>
+            <td data-label="链接">${linkCell}</td>
+        `;
+        frag.appendChild(tr);
+    });
+    $wishTableBody.appendChild(frag);
+}
+
+function setViewMode(mode) {
+    currentView = mode === 'table' ? 'table' : 'card';
+    $viewModeToggle.textContent = currentView === 'table' ? '卡片模式' : '表格模式';
+    $viewModeToggle.setAttribute('aria-pressed', currentView === 'table' ? 'true' : 'false');
+    $viewModeToggle.classList.toggle('view-mode-toggle--active', currentView === 'table');
+    renderWishes();
+}
+
+$viewModeToggle.addEventListener('click', () => {
+    setViewMode(currentView === 'table' ? 'card' : 'table');
+});
+
+function setShowSpecial(on) {
+    showSpecial = !!on;
+    $showSpecialToggle.textContent = showSpecial ? '隐藏恶搞' : '显示恶搞';
+    $showSpecialToggle.setAttribute('aria-pressed', showSpecial ? 'true' : 'false');
+    $showSpecialToggle.classList.toggle('view-mode-toggle--active', showSpecial);
+    renderWishes();
+}
+
+$showSpecialToggle.addEventListener('click', () => {
+    setShowSpecial(!showSpecial);
+});
 
 function buildWishCardHTML(w) {
     const time = formatTime(w.created_at);

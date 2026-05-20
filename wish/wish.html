@@ -40,6 +40,8 @@
                     <option value="已有重复">已有重复</option>
                     <option value="何意味">何意味</option>
                 </select>
+                <button id="viewModeToggle" class="view-mode-toggle" type="button" aria-pressed="false">表格模式</button>
+                <button id="showSpecialToggle" class="view-mode-toggle" type="button" aria-pressed="false">显示恶搞</button>
                 <span class="filter-hint">共 <span id="wishCount">0</span> 条许愿</span>
             </div>
             <div id="emptyState" class="empty-state" style="display:none;">
@@ -47,6 +49,23 @@
             </div>
             <div id="loading" class="loading">加载中...</div>
             <div id="wishGrid" class="wish-grid"></div>
+            <div id="wishTableWrap" class="wish-table-wrap" style="display:none;">
+                <table id="wishTable" class="wish-table">
+                    <thead>
+                        <tr>
+                            <th>菜品</th>
+                            <th>食堂</th>
+                            <th>位置</th>
+                            <th>价格</th>
+                            <th>许愿人</th>
+                            <th>状态</th>
+                            <th>时间</th>
+                            <th>链接</th>
+                        </tr>
+                    </thead>
+                    <tbody id="wishTableBody"></tbody>
+                </table>
+            </div>
         </div>
 
         <!-- 提交许愿 -->
