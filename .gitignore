@@ -1,0 +1,52 @@
+# ---- OS ----
+.DS_Store
+Thumbs.db
+desktop.ini
+*~
+
+# ---- Editors / IDE ----
+.vscode/
+.idea/
+*.swp
+*.swo
+*.sublime-project
+*.sublime-workspace
+
+# ---- Claude Code 本地配置（项目级用户权限，不应提交） ----
+.claude/settings.local.json
+
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*$py.class
+.Python
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+env/
+ENV/
+
+# ---- 环境变量 ----
+.env
+.env.local
+.env.*.local
+
+# ---- 日志 / 临时 / 备份 ----
+*.log
+*.tmp
+*.bak
+
+# ---- SQLite 辅助文件（主 data/menu.db 仍跟踪，作为静态资源） ----
+*.db-journal
+*.db-shm
+*.db-wal
+
+# ---- Node（未来若引入构建工具用得上） ----
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*

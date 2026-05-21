@@ -32,6 +32,16 @@ let currentView = 'card';
 let showSpecial = false;
 let adminPassword = null;
 
+const SORT_MODES = [
+    { key: 'time_desc', label: '排序: 时间 ↓' },
+    { key: 'time_asc', label: '排序: 时间 ↑' },
+    { key: 'name_asc', label: '排序: 名称 A→Z' },
+    { key: 'name_desc', label: '排序: 名称 Z→A' },
+    { key: 'likes_desc', label: '排序: 点赞 ↓' },
+    { key: 'likes_asc', label: '排序: 点赞 ↑' },
+];
+let sortIndex = 0;
+
 const LIKED_STORAGE_KEY = 'wish_liked_ids_v1';
 
 function getLikedSet() {
@@ -92,6 +102,7 @@ const $adminIndicator = document.getElementById('adminIndicator');
 const $adminLogoutBtn = document.getElementById('adminLogoutBtn');
 const $viewModeToggle = document.getElementById('viewModeToggle');
 const $showSpecialToggle = document.getElementById('showSpecialToggle');
+const $sortToggle = document.getElementById('sortToggle');
 const $wishTableWrap = document.getElementById('wishTableWrap');
 const $wishTableBody = document.getElementById('wishTableBody');
 
@@ -187,6 +198,8 @@ function renderWishes() {
         filtered = filtered.filter(w => !isSpecialLink(w.official_link));
     }
 
+    filtered = sortWishes(filtered);
+
     document.getElementById('wishCount').textContent = filtered.length;
 
     const showAsTable = currentView === 'table';
@@ -275,6 +288,43 @@ function setShowSpecial(on) {
 
 $showSpecialToggle.addEventListener('click', () => {
     setShowSpecial(!showSpecial);
+});
+
+function sortWishes(list) {
+    const mode = SORT_MODES[sortIndex] || SORT_MODES[0];
+    const arr = list.slice();
+    switch (mode.key) {
+        case 'time_desc':
+            arr.sort((a, b) => (b.created_at || '').localeCompare(a.created_at || ''));
+            break;
+        case 'time_asc':
+            arr.sort((a, b) => (a.created_at || '').localeCompare(b.created_at || ''));
+            break;
+        case 'name_asc':
+            arr.sort((a, b) => (a.name || '').localeCompare(b.name || '', 'zh-CN'));
+            break;
+        case 'name_desc':
+            arr.sort((a, b) => (b.name || '').localeCompare(a.name || '', 'zh-CN'));
+            break;
+        case 'likes_desc':
+            arr.sort((a, b) => Number(b.likes || 0) - Number(a.likes || 0));
+            break;
+        case 'likes_asc':
+            arr.sort((a, b) => Number(a.likes || 0) - Number(b.likes || 0));
+            break;
+    }
+    return arr;
+}
+
+function applySortLabel() {
+    const mode = SORT_MODES[sortIndex] || SORT_MODES[0];
+    $sortToggle.textContent = mode.label;
+}
+
+$sortToggle.addEventListener('click', () => {
+    sortIndex = (sortIndex + 1) % SORT_MODES.length;
+    applySortLabel();
+    renderWishes();
 });
 
 function buildWishCardHTML(w) {
