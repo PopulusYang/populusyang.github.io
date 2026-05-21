@@ -582,6 +582,78 @@ h1 {
     color: #9b3b6b;
 }
 
+/* ---- Like Button ---- */
+
+.wish-like-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    border: 1px solid rgba(180, 60, 70, 0.22);
+    border-radius: 999px;
+    background: rgba(255, 245, 245, 0.85);
+    color: #a04030;
+    font-family: inherit;
+    font-size: 0.84rem;
+    font-weight: 600;
+    line-height: 1;
+    cursor: pointer;
+    transition: background 180ms ease, color 180ms ease, border-color 180ms ease, transform 180ms ease, box-shadow 180ms ease;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    user-select: none;
+}
+
+.wish-like-btn:hover {
+    background: rgba(255, 230, 230, 0.95);
+    border-color: rgba(180, 60, 70, 0.42);
+    transform: translateY(-1px);
+}
+
+.wish-like-btn:active {
+    transform: translateY(0);
+}
+
+.wish-like-btn.liked {
+    background: linear-gradient(135deg, #d4536b, #b83c5a);
+    color: #fff;
+    border-color: #b83c5a;
+    box-shadow: 0 3px 10px rgba(184, 60, 90, 0.28);
+}
+
+.wish-like-btn.liked:hover {
+    background: linear-gradient(135deg, #c14861, #a8344f);
+    border-color: #a8344f;
+}
+
+.wish-like-icon {
+    font-size: 0.98rem;
+    line-height: 1;
+    display: inline-block;
+    transform: translateY(-0.5px);
+}
+
+.wish-like-count {
+    font-variant-numeric: tabular-nums;
+    min-width: 14px;
+    text-align: center;
+}
+
+.wish-like-btn--table {
+    padding: 3px 9px;
+    font-size: 0.8rem;
+}
+
+@keyframes wish-like-bump {
+    0% { transform: scale(1); }
+    40% { transform: scale(1.18); }
+    100% { transform: scale(1); }
+}
+
+.wish-like-bump {
+    animation: wish-like-bump 280ms ease-out;
+}
+
 /* ---- Admin Controls on Cards ---- */
 
 .admin-actions {
@@ -824,6 +896,7 @@ h1 {
         flex-direction: row;
         align-items: center;
         flex-wrap: wrap;
+        gap: 8px;
     }
 
     .wish-form {
@@ -834,7 +907,7 @@ h1 {
         width: 140px;
     }
 
-    /* ---- 窄屏表格：仅显示 菜品/食堂/状态/链接 四列 ---- */
+    /* ---- 窄屏表格：仅显示 菜品/食堂/状态/点赞/链接 五列 ---- */
     .wish-table {
         font-size: 0.86rem;
         table-layout: fixed;
@@ -847,37 +920,42 @@ h1 {
         white-space: normal;
     }
 
-    /* 隐藏 位置(3)、价格(4)、许愿人(5)、时间(7) */
+    /* 隐藏 位置(3)、价格(4)、许愿人(5)、时间(8) */
     .wish-table th:nth-child(3),
     .wish-table td:nth-child(3),
     .wish-table th:nth-child(4),
     .wish-table td:nth-child(4),
     .wish-table th:nth-child(5),
     .wish-table td:nth-child(5),
-    .wish-table th:nth-child(7),
-    .wish-table td:nth-child(7) {
+    .wish-table th:nth-child(8),
+    .wish-table td:nth-child(8) {
         display: none;
     }
 
-    /* 余下 4 列的宽度分配：菜品/食堂稍宽，状态/链接较窄 */
+    /* 余下 5 列的宽度分配 */
     .wish-table th:nth-child(1),
     .wish-table td:nth-child(1) {
-        width: 32%;
+        width: 28%;
     }
 
     .wish-table th:nth-child(2),
     .wish-table td:nth-child(2) {
-        width: 28%;
+        width: 22%;
     }
 
     .wish-table th:nth-child(6),
     .wish-table td:nth-child(6) {
-        width: 22%;
+        width: 20%;
     }
 
-    .wish-table th:nth-child(8),
-    .wish-table td:nth-child(8) {
-        width: 18%;
+    .wish-table th:nth-child(7),
+    .wish-table td:nth-child(7) {
+        width: 16%;
+    }
+
+    .wish-table th:nth-child(9),
+    .wish-table td:nth-child(9) {
+        width: 14%;
     }
 
     .admin-actions {

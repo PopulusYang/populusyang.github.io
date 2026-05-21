@@ -32,6 +32,45 @@ let currentView = 'card';
 let showSpecial = false;
 let adminPassword = null;
 
+const LIKED_STORAGE_KEY = 'wish_liked_ids_v1';
+
+function getLikedSet() {
+    try {
+        const raw = localStorage.getItem(LIKED_STORAGE_KEY);
+        if (!raw) return new Set();
+        const arr = JSON.parse(raw);
+        return new Set(Array.isArray(arr) ? arr.map(Number) : []);
+    } catch {
+        return new Set();
+    }
+}
+
+function setLikedLocal(id, liked) {
+    const s = getLikedSet();
+    if (liked) s.add(Number(id)); else s.delete(Number(id));
+    try {
+        localStorage.setItem(LIKED_STORAGE_KEY, JSON.stringify([...s]));
+    } catch {
+        // ignore quota errors
+    }
+}
+
+function syncLikedFromServer(list) {
+    const s = getLikedSet();
+    list.forEach(w => {
+        if (w.liked) s.add(Number(w.id));
+    });
+    try {
+        localStorage.setItem(LIKED_STORAGE_KEY, JSON.stringify([...s]));
+    } catch {
+        // ignore
+    }
+}
+
+function isLiked(id) {
+    return getLikedSet().has(Number(id));
+}
+
 /* ---- DOM Ref cache ---- */
 
 const $tabPool = document.getElementById('tabPool');
@@ -117,6 +156,7 @@ async function loadWishes() {
         const data = await apiGet('/api/wishes' + qs);
         if (data.success) {
             wishes = data.wishes;
+            syncLikedFromServer(wishes);
             renderWishes();
         } else {
             $loading.textContent = '加载失败: ' + (data.message || '未知错误');
@@ -168,8 +208,11 @@ function renderWishes() {
     filtered.forEach(w => {
         const card = document.createElement('div');
         card.className = 'wish-card';
+        card.dataset.wishId = w.id;
         card.innerHTML = buildWishCardHTML(w);
         $wishGrid.appendChild(card);
+
+        wireLikeButton(card, w);
 
         if (adminPassword) {
             wireAdminControls(card, w);
@@ -182,9 +225,17 @@ function renderWishTable(list) {
     list.forEach(w => {
         const status = getDisplayStatus(w);
         const tr = document.createElement('tr');
+        tr.dataset.wishId = w.id;
         const linkCell = w.official_link
             ? `<a class="wish-table-link" href="${esc(w.official_link)}" target="_blank" rel="noopener noreferrer">查看</a>`
             : '<span class="wish-table-empty">—</span>';
+        const liked = isLiked(w.id);
+        const likeCount = Number(w.likes || 0);
+        const likeCellHTML = `
+            <button class="wish-like-btn wish-like-btn--table${liked ? ' liked' : ''}" type="button" aria-pressed="${liked ? 'true' : 'false'}" aria-label="点赞">
+                <span class="wish-like-icon" aria-hidden="true">${liked ? '♥' : '♡'}</span>
+                <span class="wish-like-count">${likeCount}</span>
+            </button>`;
         tr.innerHTML = `
             <td data-label="菜品" class="wish-table-name">${esc(w.name)}</td>
             <td data-label="食堂">${esc(w.canteen)}</td>
@@ -192,10 +243,12 @@ function renderWishTable(list) {
             <td data-label="价格">${w.price ? esc(w.price) : '<span class="wish-table-empty">—</span>'}</td>
             <td data-label="许愿人">${esc(w.submitter)}</td>
             <td data-label="状态"><span class="status-badge ${STATUS_CSS[status] || 'status-badge--pending'}">${status}</span></td>
+            <td data-label="点赞">${likeCellHTML}</td>
             <td data-label="时间" class="wish-table-time">${formatTime(w.created_at)}</td>
             <td data-label="链接">${linkCell}</td>
         `;
         frag.appendChild(tr);
+        wireLikeButton(tr, w);
     });
     $wishTableBody.appendChild(frag);
 }
@@ -239,6 +292,14 @@ function buildWishCardHTML(w) {
         ? `<a class="wish-link" href="${esc(w.official_link)}" target="_blank" rel="noopener noreferrer">查看公众号文章</a>`
         : '';
 
+    const liked = isLiked(w.id);
+    const likeCount = Number(w.likes || 0);
+    const likeBtnHTML = `
+        <button class="wish-like-btn${liked ? ' liked' : ''}" type="button" aria-pressed="${liked ? 'true' : 'false'}" aria-label="点赞">
+            <span class="wish-like-icon" aria-hidden="true">${liked ? '♥' : '♡'}</span>
+            <span class="wish-like-count">${likeCount}</span>
+        </button>`;
+
     return `
         <div class="wish-info">
             <div class="wish-dish-name">${esc(w.name)}</div>
@@ -249,6 +310,7 @@ function buildWishCardHTML(w) {
         </div>
         <div class="wish-status-cell">
             <span class="status-badge ${STATUS_CSS[getDisplayStatus(w)] || 'status-badge--pending'}">${getDisplayStatus(w)}</span>
+            ${likeBtnHTML}
             ${adminPassword ? '<div class="admin-actions"></div>' : ''}
         </div>`;
 }
@@ -282,6 +344,65 @@ function wireAdminControls(card, w) {
     actionsEl.appendChild(btnRow);
     actionsEl.appendChild(linkInput);
     actionsEl.appendChild(delBtn);
+}
+
+/* ---- Like ---- */
+
+function wireLikeButton(container, w) {
+    const btn = container.querySelector('.wish-like-btn');
+    if (!btn) return;
+    btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        handleLikeToggle(w.id, btn);
+    });
+}
+
+async function handleLikeToggle(wishId, btn) {
+    if (btn.dataset.busy === '1') return;
+    btn.dataset.busy = '1';
+
+    const previouslyLiked = btn.classList.contains('liked');
+    const optimisticLiked = !previouslyLiked;
+    const countEl = btn.querySelector('.wish-like-count');
+    const iconEl = btn.querySelector('.wish-like-icon');
+    const prevCount = Number(countEl.textContent || 0);
+    const optimisticCount = optimisticLiked ? prevCount + 1 : Math.max(0, prevCount - 1);
+
+    btn.classList.toggle('liked', optimisticLiked);
+    btn.setAttribute('aria-pressed', optimisticLiked ? 'true' : 'false');
+    if (iconEl) iconEl.textContent = optimisticLiked ? '♥' : '♡';
+    countEl.textContent = optimisticCount;
+    btn.classList.add('wish-like-bump');
+    setTimeout(() => btn.classList.remove('wish-like-bump'), 280);
+
+    try {
+        const data = await apiPost(`/api/wishes/${wishId}/like`, {});
+        if (!data || data.success === false) {
+            throw new Error(data && data.message || '点赞失败');
+        }
+        const serverLiked = !!data.liked;
+        const serverCount = Number(data.likes || 0);
+        btn.classList.toggle('liked', serverLiked);
+        btn.setAttribute('aria-pressed', serverLiked ? 'true' : 'false');
+        if (iconEl) iconEl.textContent = serverLiked ? '♥' : '♡';
+        countEl.textContent = serverCount;
+        setLikedLocal(wishId, serverLiked);
+
+        const target = wishes.find(x => Number(x.id) === Number(wishId));
+        if (target) {
+            target.likes = serverCount;
+            target.liked = serverLiked;
+        }
+    } catch (err) {
+        btn.classList.toggle('liked', previouslyLiked);
+        btn.setAttribute('aria-pressed', previouslyLiked ? 'true' : 'false');
+        if (iconEl) iconEl.textContent = previouslyLiked ? '♥' : '♡';
+        countEl.textContent = prevCount;
+        alert((err && err.message) || '点赞失败，请稍后再试');
+    } finally {
+        btn.dataset.busy = '';
+    }
 }
 
 /* ---- Admin Operations ---- */

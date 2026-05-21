@@ -37,6 +37,18 @@ def init_db():
                 updated_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         """)
+        cols = {row["name"] for row in conn.execute("PRAGMA table_info(wishes)").fetchall()}
+        if "likes" not in cols:
+            conn.execute("ALTER TABLE wishes ADD COLUMN likes INTEGER NOT NULL DEFAULT 0")
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS wish_likes (
+                wish_id    INTEGER NOT NULL,
+                client_id  TEXT    NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                PRIMARY KEY (wish_id, client_id),
+                FOREIGN KEY (wish_id) REFERENCES wishes(id) ON DELETE CASCADE
+            )
+        """)
 
 
 def wish_to_dict(row):
@@ -51,11 +63,21 @@ def wish_to_dict(row):
         "official_link": row["official_link"],
         "created_at": row["created_at"],
         "updated_at": row["updated_at"],
+        "likes": row["likes"] if "likes" in row.keys() else 0,
     }
 
 
 def check_admin(data):
     return data and data.get("password") == ADMIN_PASSWORD
+
+
+def get_client_id():
+    fwd = request.headers.get("X-Forwarded-For", "")
+    if fwd:
+        ip = fwd.split(",")[0].strip()
+    else:
+        ip = request.remote_addr or "unknown"
+    return ip
 
 
 @app.route("/api/wishes", methods=["POST"])
@@ -99,6 +121,7 @@ def verify_password():
 @app.route("/api/wishes", methods=["GET"])
 def list_wishes():
     submitter = request.args.get("submitter", "").strip()
+    client_id = get_client_id()
 
     with get_db() as conn:
         if submitter:
@@ -111,7 +134,20 @@ def list_wishes():
                 "SELECT * FROM wishes ORDER BY created_at DESC"
             ).fetchall()
 
-    return jsonify({"success": True, "wishes": [wish_to_dict(r) for r in rows]})
+        liked_ids = {
+            r["wish_id"]
+            for r in conn.execute(
+                "SELECT wish_id FROM wish_likes WHERE client_id = ?",
+                (client_id,),
+            ).fetchall()
+        }
+
+    wishes = []
+    for r in rows:
+        d = wish_to_dict(r)
+        d["liked"] = d["id"] in liked_ids
+        wishes.append(d)
+    return jsonify({"success": True, "wishes": wishes})
 
 
 @app.route("/api/wishes/<int:wish_id>", methods=["PUT"])
@@ -166,8 +202,46 @@ def delete_wish(wish_id):
         if not existing:
             return jsonify({"success": False, "message": "许愿不存在"}), 404
         conn.execute("DELETE FROM wishes WHERE id = ?", (wish_id,))
+        conn.execute("DELETE FROM wish_likes WHERE wish_id = ?", (wish_id,))
 
     return jsonify({"success": True, "message": "删除成功"})
+
+
+@app.route("/api/wishes/<int:wish_id>/like", methods=["POST"])
+def toggle_like(wish_id):
+    client_id = get_client_id()
+
+    with get_db() as conn:
+        existing = conn.execute("SELECT id, likes FROM wishes WHERE id = ?", (wish_id,)).fetchone()
+        if not existing:
+            return jsonify({"success": False, "message": "许愿不存在"}), 404
+
+        already = conn.execute(
+            "SELECT 1 FROM wish_likes WHERE wish_id = ? AND client_id = ?",
+            (wish_id, client_id),
+        ).fetchone()
+
+        if already:
+            conn.execute(
+                "DELETE FROM wish_likes WHERE wish_id = ? AND client_id = ?",
+                (wish_id, client_id),
+            )
+            conn.execute(
+                "UPDATE wishes SET likes = CASE WHEN likes > 0 THEN likes - 1 ELSE 0 END WHERE id = ?",
+                (wish_id,),
+            )
+            liked = False
+        else:
+            conn.execute(
+                "INSERT INTO wish_likes (wish_id, client_id) VALUES (?, ?)",
+                (wish_id, client_id),
+            )
+            conn.execute("UPDATE wishes SET likes = likes + 1 WHERE id = ?", (wish_id,))
+            liked = True
+
+        likes = conn.execute("SELECT likes FROM wishes WHERE id = ?", (wish_id,)).fetchone()["likes"]
+
+    return jsonify({"success": True, "liked": liked, "likes": likes})
 
 
 if __name__ == "__main__":
