@@ -1,4 +1,4 @@
-const API_BASE = 'https://api-home.u365043.nyat.app:19703';
+const API_BASE = 'https://119.84.246.217:19703/';
 
 const STATUS_LABELS = {
     '待评测': '待评测',
